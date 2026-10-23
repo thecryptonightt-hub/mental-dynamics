@@ -358,8 +358,9 @@
     .mg-nums{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
     .mg-num{background:var(--mg-sky);border-radius:14px;padding:12px 10px;min-width:58px;text-align:center;font-size:30px;font-weight:800;letter-spacing:1px;color:var(--mg-blue-dark);font-variant-numeric:tabular-nums}
     .mg-num.d2{min-width:70px}.mg-num.d3{min-width:88px;font-size:27px}.mg-num.d4{min-width:106px;font-size:25px}
-    .mg-pics{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;align-items:center;max-width:400px}
-    .mg-pic{line-height:1}
+    .mg-pics{display:flex;flex-wrap:wrap;gap:10px 12px;justify-content:center;align-items:center;max-width:400px}
+    .mg-pic{line-height:1;display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+    .mg-pic-tag{font-size:8px;font-weight:800;letter-spacing:.6px;padding:2px 6px;border-radius:99px;color:#fff;line-height:1.25;white-space:nowrap}
     .mg-flash-msg{font-size:16px;font-weight:700;color:var(--mg-muted);text-align:center}
     .mg-inputs{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
     .mg-inputs input{width:62px;padding:12px 4px;font-size:22px;font-weight:800;text-align:center;border:2px solid var(--mg-sky2);border-radius:14px;color:var(--mg-blue-dark);background:var(--mg-sky);font-variant-numeric:tabular-nums;outline:none;font-family:inherit}
@@ -710,7 +711,7 @@
           <div>
             <p class="section-label">New from Mental Dynamics</p>
             <h2 id="gym-title">The Mental Gym — train your brain like a muscle.</h2>
-            <p class="intro" style="margin-top:20px">A memory trainer from Mental Dynamics with three games in one: <strong>Card Match</strong>, <strong>Number Flash</strong> — numbers flash for five seconds, then you type them back across 16 levels, from single digits all the way to four-digit Super Expert — and <strong>Picture Flash</strong>, counting cars, birds, houses and buildings through 10 levels, mixed rounds included. The full game is right here on this page — pick a game and play.</p>
+            <p class="intro" style="margin-top:20px">A memory trainer from Mental Dynamics with three games in one: <strong>Card Match</strong>, <strong>Number Flash</strong> — numbers flash for five seconds, then you type them back across 16 levels, from single digits all the way to four-digit Super Expert — and <strong>Picture Flash</strong> — counting lions, zebras, tigers, giraffes, Ferraris, Lamborghinis and Porsches through 12 levels, with up to four kinds mixed at once and the clock shrinking from five seconds down to two. The full game is right here on this page — pick a game and play.</p>
           </div>
           <div class="gym-price">
             <h3>Take The Mental Gym with you</h3>
@@ -739,8 +740,8 @@
                 <span><span class="mg-tt">Number Flash</span><span class="mg-ds">Numbers flash for 5 seconds — then type them back in order. 16 levels, up to four-digit numbers.</span><span class="mg-pr" id="pr-numbers"></span></span>
               </button>
               <button class="mg-game-btn" id="go-pictures" type="button">
-                <span class="mg-ic" aria-hidden="true">🚗</span>
-                <span><span class="mg-tt">Picture Flash</span><span class="mg-ds">Cars, birds, houses flash for 5 seconds — then tell us how many you saw. Mixed rounds at the top levels.</span><span class="mg-pr" id="pr-pictures"></span></span>
+                <span class="mg-ic" aria-hidden="true">🦁</span>
+                <span><span class="mg-tt">Picture Flash</span><span class="mg-ds">Lions, zebras, Ferraris, Lambos and more flash on screen — 5 seconds at first, down to 2 at the top. Then tell us how many of each you saw.</span><span class="mg-pr" id="pr-pictures"></span></span>
               </button>
             </div>
           </div>
@@ -780,8 +781,8 @@
 
           <div class="mg-screen" id="scr-pictures">
             <button class="mg-backbtn" type="button" data-back>← All games</button>
-            <h3 class="mg-gtitle">🚗 Picture Flash</h3>
-            <p class="mg-howto">Count what flashes on screen — you get 5 seconds — then tell us how many of each you saw.</p>
+            <h3 class="mg-gtitle">🦁 Picture Flash</h3>
+            <p class="mg-howto">Count what flashes on screen — lions, zebras, tigers, giraffes, Ferraris, Lambos, Porsches and more. You get 5 seconds on the first levels, then the clock drops: 4 seconds, 3 seconds, and just 2 seconds at the top. Mixed rounds pile on more kinds as you climb.</p>
             <div class="mg-level-grid" id="pic-levels"></div>
             <div class="mg-stats"><span id="pic-stage-label"></span></div>
             <div class="mg-stage" id="pic-stage"><div class="mg-flash-msg">Pick a level, then tap Start.</div></div>
@@ -973,15 +974,15 @@
         var n = store("mg_numbers_unlocked") || 1;
         var p = store("mg_pictures_unlocked") || 1;
         $("pr-numbers").textContent = n>1 ? ("Progress: level "+Math.min(n,16)+" of 16 unlocked") : "";
-        $("pr-pictures").textContent = p>1 ? ("Progress: level "+Math.min(p,10)+" of 10 unlocked") : "";
+        $("pr-pictures").textContent = p>1 ? ("Progress: level "+Math.min(p,12)+" of 12 unlocked") : "";
         var cb = store("mentalGymBest_medium");
         $("pr-cards").textContent = cb ? ("Best (Medium): "+cb.moves+" moves") : "";
       }
 
-      /* ---------- 5-second flash timer with bar ---------- */
-      function flashTimer(barEl, wrapEl, done){
+      /* ---------- flash timer with bar (default 5 seconds) ---------- */
+      function flashTimer(barEl, wrapEl, done, durMs){
         wrapEl.style.display = "block";
-        var start = Date.now(), dur = 5000, raf;
+        var start = Date.now(), dur = durMs || 5000, raf;
         (function tick(){
           var left = Math.max(0, 1 - (Date.now()-start)/dur);
           barEl.style.width = (left*100)+"%";
@@ -1161,11 +1162,38 @@
 
       /* ================= PICTURE FLASH ================= */
       var PIC_TYPES = [
-        {e:"🚗", name:"cars"}, {e:"🐦", name:"birds"}, {e:"🏠", name:"houses"}, {e:"🏢", name:"buildings"}
+        {e:"🦁", name:"lions"},
+        {e:"🦓", name:"zebras"},
+        {e:"🐅", name:"tigers"},
+        {e:"🦒", name:"giraffes"},
+        {e:"🏎️", name:"Ferraris", tag:"FERRARI", tagColor:"#d21f2c"},
+        {e:"🚘", name:"Lamborghinis", tag:"LAMBO", tagColor:"#dd8f00"},
+        {e:"🚗", name:"Porsches", tag:"PORSCHE", tagColor:"#5b7a99"},
+        {e:"🐦", name:"birds"},
+        {e:"🏠", name:"houses"},
+        {e:"🏢", name:"buildings"}
       ];
-      var picLevels = [];
-      [2,4,6,8,10].forEach(function(c){ picLevels.push({mix:false, count:c, label:c+" of one kind"}); });
-      [[2,2],[4,2],[4,4],[6,4],[6,6]].forEach(function(pr){ picLevels.push({mix:true, a:pr[0], b:pr[1], label:pr[0]+" + "+pr[1]+" mixed"}); });
+      /* 12 levels: more kinds mixed together as you climb, and the clock
+         shrinks — 5 seconds at the start, down to 2 seconds at the top. */
+      var picLevels = [
+        {counts:[4],       secs:5},
+        {counts:[6],       secs:5},
+        {counts:[8],       secs:5},
+        {counts:[3,3],     secs:4},
+        {counts:[4,4],     secs:4},
+        {counts:[5,5],     secs:4},
+        {counts:[6,6],     secs:3},
+        {counts:[3,3,3],   secs:3},
+        {counts:[4,4,4],   secs:3},
+        {counts:[5,5,5],   secs:2},
+        {counts:[6,6,6],   secs:2},
+        {counts:[4,4,4,4], secs:2}
+      ];
+      function picTotal(lv){ var t = 0; lv.counts.forEach(function(c){ t += c; }); return t; }
+      function picLabel(lv){
+        if(lv.counts.length === 1) return picTotal(lv)+" of one kind · "+lv.secs+" seconds to look";
+        return lv.counts.join(" + ")+" mixed · "+lv.secs+" seconds to look";
+      }
       var picSel = 1, picAnswer = {}, picPicks = {}, picPlaying = false, picCancel = null;
       function picUnlocked(){ return store("mg_pictures_unlocked") || 1; }
       function renderPicLevels(){
@@ -1176,19 +1204,20 @@
           var btn = document.createElement("button");
           btn.type = "button";
           btn.className = "mg-lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===picSel ? " sel" : "");
-          btn.innerHTML = n + "<small>" + (lv.mix ? "mixed" : lv.count+" pics") + "</small>";
+          btn.innerHTML = n + "<small>" + (lv.counts.length>1 ? "mixed" : lv.counts[0]+" pics") + " · " + lv.secs + "s</small>";
           if(n<=un) btn.addEventListener("click", function(){ if(!picPlaying){ picSel = n; renderPicLevels(); picStageLabel(); resetPicStage(); } });
           grid.appendChild(btn);
         });
       }
       function picStageLabel(){
         var lv = picLevels[picSel-1];
-        $("pic-stage-label").innerHTML = "<b>Level "+picSel+"</b> · "+lv.label;
+        $("pic-stage-label").innerHTML = "<b>Level "+picSel+"</b> · "+picLabel(lv);
       }
       function resetPicStage(){
         if(picCancel){ picCancel(); picCancel = null; }
         picPlaying = false;
-        $("pic-stage").innerHTML = '<div class="mg-flash-msg">Tap Start — count fast, you get 5 seconds.</div>';
+        var lv = picLevels[picSel-1];
+        $("pic-stage").innerHTML = '<div class="mg-flash-msg">Tap Start — count fast, you get '+lv.secs+' seconds.</div>';
         $("pic-result").textContent = ""; $("pic-result").className = "mg-result";
         $("pic-start").style.display = ""; $("pic-start").textContent = "▶ Start";
         $("pic-next").style.display = "none";
@@ -1199,29 +1228,25 @@
         var types = shuffle(PIC_TYPES.slice());
         var items = [];
         picAnswer = {}; picPicks = {};
-        if(!lv.mix){
-          var t = types[0];
-          picAnswer[t.name] = {count:lv.count, emoji:t.e};
-          for(var i=0;i<lv.count;i++) items.push(t.e);
-        } else {
-          var t1 = types[0], t2 = types[1];
-          picAnswer[t1.name] = {count:lv.a, emoji:t1.e};
-          picAnswer[t2.name] = {count:lv.b, emoji:t2.e};
-          for(var a=0;a<lv.a;a++) items.push(t1.e);
-          for(var b=0;b<lv.b;b++) items.push(t2.e);
-        }
+        lv.counts.forEach(function(c, ci){
+          var t = types[ci];
+          picAnswer[t.name] = {count:c, emoji:t.e};
+          for(var i=0;i<c;i++) items.push(t);
+        });
         shuffle(items);
         picPlaying = true;
         $("pic-start").style.display = "none"; $("pic-next").style.display = "none";
         $("pic-result").textContent = "";
         var html = '<div class="mg-pics">';
-        items.forEach(function(e, idx){
-          var size = 34 + ((idx*7)%3)*6;
-          var rot = ((idx*13)%17)-8;
-          html += '<span class="mg-pic" style="font-size:'+size+'px; transform:rotate('+rot+'deg);">'+e+"</span>";
+        items.forEach(function(t, idx){
+          var size = 32 + ((idx*7)%4)*5;
+          var rot = ((idx*13)%21)-10;
+          html += '<span class="mg-pic" style="transform:rotate('+rot+'deg);"><span style="font-size:'+size+'px;">'+t.e+"</span>"
+            + (t.tag ? '<span class="mg-pic-tag" style="background:'+t.tagColor+'">'+t.tag+"</span>" : "")
+            + "</span>";
         });
         $("pic-stage").innerHTML = html + "</div>";
-        picCancel = flashTimer($("pic-bar"), $("pic-barwrap"), showPicQuestions);
+        picCancel = flashTimer($("pic-bar"), $("pic-barwrap"), showPicQuestions, lv.secs*1000);
       });
       function optionsFor(correct){
         var set = [correct];
@@ -1275,10 +1300,10 @@
         picPlaying = false;
         if(allOk){
           var un = picUnlocked();
-          if(picSel === un && picSel < 10) store("mg_pictures_unlocked", picSel+1);
-          $("pic-result").textContent = picSel===10 ? "🏆 You beat Picture Flash — every level!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
+          if(picSel === un && picSel < picLevels.length) store("mg_pictures_unlocked", picSel+1);
+          $("pic-result").textContent = picSel===picLevels.length ? "🏆 You beat Picture Flash — every level, down to the 2-second rounds!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
           $("pic-result").className = "mg-result good";
-          if(picSel < 10) $("pic-next").style.display = "";
+          if(picSel < picLevels.length) $("pic-next").style.display = "";
           $("pic-start").style.display = ""; $("pic-start").textContent = "↻ Play again";
           renderPicLevels();
         } else {
@@ -1290,7 +1315,7 @@
         }
       }
       $("pic-next").addEventListener("click", function(){
-        if(picSel < 10){ picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click(); }
+        if(picSel < picLevels.length){ picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click(); }
       });
       renderPicLevels(); picStageLabel(); resetPicStage();
       renderHomeProgress();
