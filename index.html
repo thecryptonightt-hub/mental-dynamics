@@ -297,6 +297,105 @@
     .footer-brand{color:var(--text);font-family:var(--serif);font-size:17px;display:inline-flex;align-items:center;gap:10px}
     .footer-brand img{width:36px;height:36px;border-radius:50%;object-fit:cover;flex:0 0 36px;background:#0b1524}
     .disclaimer{max-width:680px;text-align:right}
+    .gym{padding:120px 0;background:var(--paper)}
+    .gym-head{display:grid;grid-template-columns:1.15fr .85fr;gap:70px;align-items:end;margin-bottom:55px}
+    .gym-head h2{margin-bottom:0}
+    .gym-price{background:var(--light);border:1px solid var(--line);box-shadow:var(--shadow);padding:28px 30px}
+    .gym-price h3{font-family:var(--serif);font-size:21px;margin:0 0 4px}
+    .gym-price .price{font-family:var(--serif);font-size:46px;line-height:1.05;color:var(--accent-strong);margin:0 0 8px}
+    .gym-price p{color:var(--muted);font-size:15px;margin:0 0 18px}
+    .gym-price .btn{width:100%}
+    .gym-price .play-link{display:block;text-align:center;margin-top:12px;font-weight:600;font-size:14px;color:var(--accent-strong);text-underline-offset:4px}
+    .mg-panel{--mg-sky:#e8f4fd;--mg-sky2:#d3eafb;--mg-ink:#0b3a53;--mg-blue:#0b6fa4;--mg-blue-dark:#084e75;--mg-card-back:#0e5a86;--mg-card-back2:#0a4265;--mg-gold:#ffc93c;--mg-white:#ffffff;--mg-muted:#527186;--mg-good:#1e9e62;--mg-bad:#d64545;background:linear-gradient(180deg,var(--mg-sky) 0%,var(--mg-sky2) 100%);color:var(--mg-ink);border:1px solid var(--line);border-radius:20px;padding:32px 16px 28px;box-shadow:var(--shadow)}
+    .mg-head{text-align:center;max-width:520px;margin:0 auto}
+    .mg-brandline{font-size:11px;letter-spacing:3px;font-weight:700;color:var(--mg-blue);text-transform:uppercase;margin:0}
+    .mg-h1{font-family:var(--sans);font-weight:800;margin:6px 0 2px;font-size:30px;letter-spacing:1px;line-height:1.15;max-width:none}
+    .mg-h1 .mg-star{color:#c99300}
+    .mg-tag{font-size:13px;color:var(--mg-muted);margin:0 0 14px}
+    .mg-screen{display:none;width:100%;max-width:520px;margin:0 auto;flex-direction:column;align-items:center}
+    .mg-screen.on{display:flex}
+    .mg-controls{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+    .mg-controls button{border:2px solid var(--mg-blue);background:var(--mg-white);color:var(--mg-blue-dark);font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;cursor:pointer}
+    .mg-controls button.active{background:var(--mg-blue);color:var(--mg-white)}
+    .mg-stats{display:flex;gap:18px;justify-content:center;margin-bottom:12px;font-size:14px;color:var(--mg-muted);flex-wrap:wrap;text-align:center}
+    .mg-stats b{color:var(--mg-ink);font-variant-numeric:tabular-nums}
+    .mg-menu{display:flex;flex-direction:column;gap:12px;width:min(100%,430px)}
+    .mg-game-btn{border:none;text-align:left;cursor:pointer;border-radius:18px;padding:18px;background:var(--mg-white);box-shadow:0 4px 14px rgba(11,58,83,.14);color:var(--mg-ink);display:flex;gap:14px;align-items:center;width:100%;font:inherit}
+    .mg-game-btn:active{transform:scale(.98)}
+    .mg-game-btn .mg-ic{font-size:38px;line-height:1}
+    .mg-game-btn .mg-tt{font-size:18px;font-weight:800;letter-spacing:.4px;display:block}
+    .mg-game-btn .mg-ds{font-size:13px;color:var(--mg-muted);margin-top:2px;display:block}
+    .mg-game-btn .mg-pr{font-size:12px;color:var(--mg-blue);font-weight:700;margin-top:4px;display:block}
+    .mg-backbtn{align-self:flex-start;background:none;border:none;color:var(--mg-blue);font-weight:700;font-size:14px;cursor:pointer;padding:6px 0;margin-bottom:4px}
+    .mg-gtitle{font-family:var(--sans);font-weight:800;margin:2px 0 4px;font-size:22px;letter-spacing:0;line-height:1.25;text-align:center;max-width:none}
+    .mg-howto{font-size:13px;color:var(--mg-muted);text-align:center;margin:0 0 12px;max-width:430px}
+    #board{display:grid;gap:10px;width:min(100%,430px);margin:0 auto;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+    .mg-card{position:relative;aspect-ratio:3/3.4;cursor:pointer;perspective:600px}
+    .mg-card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .38s ease}
+    .mg-card.flipped .mg-card-inner{transform:rotateY(180deg)}
+    .mg-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(11,58,83,.18)}
+    .mg-face-back{background:linear-gradient(135deg,var(--mg-card-back) 0%,var(--mg-card-back2) 100%);color:var(--mg-gold);font-size:30px}
+    .mg-face-back::after{content:"✦";opacity:.85}
+    .mg-face-front{background:var(--mg-white);transform:rotateY(180deg);border:2px solid var(--mg-sky2)}
+    .mg-face-front .mg-emoji{font-size:34px;line-height:1}
+    .mg-face-front .mg-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mg-blue-dark);margin-top:6px}
+    .mg-card.matched{cursor:default}
+    .mg-card.matched .mg-face-front{border-color:var(--mg-gold);background:#fffbef;animation:mgpop .35s ease}
+    @keyframes mgpop{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.08)}100%{transform:rotateY(180deg) scale(1)}}
+    .mg-big-btn{margin-top:16px;border:none;background:var(--mg-blue);color:#fff;font-weight:800;font-size:15px;padding:12px 28px;border-radius:999px;cursor:pointer;box-shadow:0 4px 12px rgba(11,111,164,.35)}
+    .mg-big-btn:active{transform:scale(.97)}
+    .mg-big-btn.mg-gold{background:var(--mg-gold);color:var(--mg-ink)}
+    .mg-level-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:430px;margin-bottom:6px}
+    .mg-lvl{width:52px;height:52px;border-radius:14px;border:2px solid var(--mg-blue);background:var(--mg-white);color:var(--mg-blue-dark);font-weight:800;font-size:15px;cursor:pointer;position:relative;padding:0}
+    .mg-lvl small{display:block;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:var(--mg-muted);text-transform:uppercase}
+    .mg-lvl.locked{opacity:.35;cursor:default}
+    .mg-lvl.done{border-color:var(--mg-good);background:#eafaf2}
+    .mg-lvl.sel{background:var(--mg-blue);color:#fff}
+    .mg-lvl.sel small{color:var(--mg-sky2)}
+    .mg-stage{width:min(100%,430px);min-height:230px;background:var(--mg-white);border-radius:20px;box-shadow:0 4px 14px rgba(11,58,83,.14);padding:20px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-top:10px}
+    .mg-bar-wrap{width:min(100%,430px);height:8px;background:var(--mg-white);border-radius:99px;overflow:hidden;margin-top:12px;box-shadow:inset 0 0 0 1px var(--mg-sky2)}
+    .mg-bar{height:100%;width:100%;background:var(--mg-gold);border-radius:99px}
+    .mg-nums{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+    .mg-num{background:var(--mg-sky);border-radius:14px;padding:12px 10px;min-width:58px;text-align:center;font-size:30px;font-weight:800;letter-spacing:1px;color:var(--mg-blue-dark);font-variant-numeric:tabular-nums}
+    .mg-num.d2{min-width:70px}.mg-num.d3{min-width:88px;font-size:27px}.mg-num.d4{min-width:106px;font-size:25px}
+    .mg-pics{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:center;align-items:center;max-width:400px}
+    .mg-pic{line-height:1}
+    .mg-flash-msg{font-size:16px;font-weight:700;color:var(--mg-muted);text-align:center}
+    .mg-inputs{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+    .mg-inputs input{width:62px;padding:12px 4px;font-size:22px;font-weight:800;text-align:center;border:2px solid var(--mg-sky2);border-radius:14px;color:var(--mg-blue-dark);background:var(--mg-sky);font-variant-numeric:tabular-nums;outline:none;font-family:inherit}
+    .mg-inputs input.d2{width:74px}.mg-inputs input.d3{width:92px;font-size:20px}.mg-inputs input.d4{width:110px;font-size:19px}
+    .mg-inputs input:focus{border-color:var(--mg-blue)}
+    .mg-inputs input.ok{border-color:var(--mg-good);background:#eafaf2}
+    .mg-inputs input.no{border-color:var(--mg-bad);background:#fdecec}
+    .mg-q-block{margin-bottom:14px;text-align:center}
+    .mg-q-block .mg-q{font-size:16px;font-weight:800;margin-bottom:8px}
+    .mg-opts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    .mg-opt{min-width:52px;padding:10px 14px;border-radius:999px;border:2px solid var(--mg-blue);background:var(--mg-white);color:var(--mg-blue-dark);font-weight:800;font-size:16px;cursor:pointer}
+    .mg-opt.sel{background:var(--mg-blue);color:#fff}
+    .mg-opt.ok{background:var(--mg-good);border-color:var(--mg-good);color:#fff}
+    .mg-opt.no{background:var(--mg-bad);border-color:var(--mg-bad);color:#fff}
+    .mg-result{font-size:17px;font-weight:800;text-align:center;margin-top:14px;min-height:24px}
+    .mg-result.good{color:var(--mg-good)}.mg-result.bad{color:var(--mg-bad)}
+    .mg-answer-line{font-size:14px;color:var(--mg-muted);text-align:center;margin-top:6px}
+    .mg-btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    .mg-foot{margin:22px auto 0;text-align:center;max-width:520px}
+    .mg-foot .mg-lockup{font-size:12px;letter-spacing:2px;font-weight:800}
+    .mg-foot .mg-cta{font-size:13px;color:var(--mg-muted);margin-top:6px}
+    .mg-foot .mg-cta a{color:var(--mg-blue);font-weight:700;text-decoration:none}
+    #mg-overlay{position:fixed;inset:0;background:rgba(11,58,83,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+    #mg-overlay.show{display:flex}
+    .mg-win-card{background:#ffffff;border-radius:20px;padding:28px 24px;max-width:360px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25);animation:mgrise .35s ease;color:var(--mg-ink)}
+    @keyframes mgrise{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+    .mg-win-card h3{font-family:var(--sans);font-weight:800;margin:0 0 4px;font-size:24px;letter-spacing:0;line-height:1.25}
+    .mg-win-card p{margin:6px 0;color:var(--mg-muted);font-size:14px}
+    .mg-win-card .mg-score{font-size:15px;color:var(--mg-ink)}
+    .mg-win-card .mg-score b{font-variant-numeric:tabular-nums}
+    .mg-call-btn{display:inline-block;margin-top:14px;background:var(--mg-blue);color:#fff;font-weight:800;padding:12px 22px;border-radius:999px;text-decoration:none;font-size:15px}
+    .mg-win-card .mg-again{display:block;margin:12px auto 0;background:none;border:none;color:var(--mg-blue);font-weight:700;font-size:14px;cursor:pointer;text-decoration:underline}
+    @media (max-width:1500px){.nav-links .nav-gym{display:none}}
+    @media (max-width:900px){.gym-head{grid-template-columns:1fr;gap:28px}}
+    @media (max-width:680px){.gym{padding:80px 0}.mg-h1{font-size:25px}.mg-panel{padding:24px 10px 22px}}
+    @media (prefers-reduced-motion:reduce){.mg-card-inner{transition:none}.mg-card.matched .mg-face-front,.mg-win-card{animation:none}}
     @media (max-width:1150px){
       .wordmark{font-size:17px}
       .brand-logo{width:38px;height:38px;flex-basis:38px}
@@ -335,6 +434,7 @@
       .nav-links.open{display:flex}
       .nav-links a{padding:13px 4px;border-bottom:1px solid var(--line)}
       .nav-links a.nav-phone{display:block}
+      .nav-links a.nav-gym{display:block}
       .nav-links .nav-cta{margin-top:10px;text-align:center;border:1px solid var(--line)}
       .hero{min-height:0}
       .hero-photo{width:100%;height:340px;object-position:center 13%}
@@ -402,6 +502,7 @@
         <a href="#credentials">Credentials</a>
         <a href="#questions">Common questions</a>
         <a href="#podcast">Podcast</a>
+        <a class="nav-gym" href="#mental-gym">Mental Gym</a>
         <a class="nav-phone" href="tel:+19548512138" aria-label="Call Mental Dynamics at 954-851-2138">Call 954-851-2138</a>
         <a href="#contact" class="nav-cta">Schedule a session</a>
       </div>
@@ -603,6 +704,114 @@
       </div>
     </section>
 
+    <section class="gym" id="mental-gym" aria-labelledby="gym-title">
+      <div class="wrap">
+        <div class="gym-head">
+          <div>
+            <p class="section-label">New from Mental Dynamics</p>
+            <h2 id="gym-title">The Mental Gym — train your brain like a muscle.</h2>
+            <p class="intro" style="margin-top:20px">A memory trainer from Mental Dynamics with three games in one: <strong>Card Match</strong>, <strong>Number Flash</strong> — numbers flash for five seconds, then you type them back across 16 levels, from single digits all the way to four-digit Super Expert — and <strong>Picture Flash</strong>, counting cars, birds, houses and buildings through 10 levels, mixed rounds included. The full game is right here on this page — pick a game and play.</p>
+          </div>
+          <div class="gym-price">
+            <h3>Take The Mental Gym with you</h3>
+            <p class="price">99¢</p>
+            <p>Want the game on your phone, away from the website? Text us and we&rsquo;ll send The Mental Gym your way — all three trainers, every level, for 99 cents.</p>
+            <a class="btn" href="sms:+19548512138?&amp;body=Hi%20Mental%20Dynamics%2C%20I%27d%20like%20to%20buy%20The%20Mental%20Gym%20game%20(99%C2%A2).">Text to get the game — 99¢</a>
+            <a class="play-link" href="#mental-gym-app">Or play the full game free below ↓</a>
+          </div>
+        </div>
+
+        <div class="mg-panel" id="mental-gym-app">
+          <div class="mg-head">
+            <p class="mg-brandline">Mental Dynamics · A Mental Fitness Company</p>
+            <h3 class="mg-h1"><span class="mg-star" aria-hidden="true">✦</span> THE MENTAL GYM <span class="mg-star" aria-hidden="true">✦</span></h3>
+            <p class="mg-tag">A memory trainer. Train your brain like a muscle.</p>
+          </div>
+
+          <div class="mg-screen on" id="scr-home">
+            <div class="mg-menu">
+              <button class="mg-game-btn" id="go-cards" type="button">
+                <span class="mg-ic" aria-hidden="true">🃏</span>
+                <span><span class="mg-tt">Card Match</span><span class="mg-ds">Flip the cards and find every pair.</span><span class="mg-pr" id="pr-cards"></span></span>
+              </button>
+              <button class="mg-game-btn" id="go-numbers" type="button">
+                <span class="mg-ic" aria-hidden="true">🔢</span>
+                <span><span class="mg-tt">Number Flash</span><span class="mg-ds">Numbers flash for 5 seconds — then type them back in order. 16 levels, up to four-digit numbers.</span><span class="mg-pr" id="pr-numbers"></span></span>
+              </button>
+              <button class="mg-game-btn" id="go-pictures" type="button">
+                <span class="mg-ic" aria-hidden="true">🚗</span>
+                <span><span class="mg-tt">Picture Flash</span><span class="mg-ds">Cars, birds, houses flash for 5 seconds — then tell us how many you saw. Mixed rounds at the top levels.</span><span class="mg-pr" id="pr-pictures"></span></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="mg-screen" id="scr-cards">
+            <button class="mg-backbtn" type="button" data-back>← All games</button>
+            <h3 class="mg-gtitle">🃏 Card Match</h3>
+            <div class="mg-controls" role="group" aria-label="Difficulty">
+              <button type="button" data-diff="easy">Easy · 12</button>
+              <button type="button" data-diff="medium" class="active">Medium · 16</button>
+              <button type="button" data-diff="hard">Hard · 24</button>
+            </div>
+            <div class="mg-stats">
+              <span>Moves <b id="moves">0</b></span>
+              <span>Time <b id="time">0:00</b></span>
+              <span>Best <b id="best">—</b></span>
+            </div>
+            <div id="board" aria-label="Memory game board"></div>
+            <button class="mg-big-btn" id="newgame" type="button">↻ New Game</button>
+          </div>
+
+          <div class="mg-screen" id="scr-numbers">
+            <button class="mg-backbtn" type="button" data-back>← All games</button>
+            <h3 class="mg-gtitle">🔢 Number Flash</h3>
+            <p class="mg-howto">Memorize the numbers — you get 5 seconds — then type them back <b>in the same order</b>. Beat a level to unlock the next.</p>
+            <div class="mg-level-grid" id="num-levels"></div>
+            <div class="mg-stats"><span id="num-stage-label"></span></div>
+            <div class="mg-stage" id="num-stage"><div class="mg-flash-msg">Pick a level, then tap Start.</div></div>
+            <div class="mg-bar-wrap" id="num-barwrap" style="display:none"><div class="mg-bar" id="num-bar"></div></div>
+            <div class="mg-result" id="num-result"></div>
+            <div class="mg-answer-line" id="num-answer"></div>
+            <div class="mg-btn-row">
+              <button class="mg-big-btn" id="num-start" type="button">▶ Start</button>
+              <button class="mg-big-btn mg-gold" id="num-next" type="button" style="display:none">Next level →</button>
+            </div>
+          </div>
+
+          <div class="mg-screen" id="scr-pictures">
+            <button class="mg-backbtn" type="button" data-back>← All games</button>
+            <h3 class="mg-gtitle">🚗 Picture Flash</h3>
+            <p class="mg-howto">Count what flashes on screen — you get 5 seconds — then tell us how many of each you saw.</p>
+            <div class="mg-level-grid" id="pic-levels"></div>
+            <div class="mg-stats"><span id="pic-stage-label"></span></div>
+            <div class="mg-stage" id="pic-stage"><div class="mg-flash-msg">Pick a level, then tap Start.</div></div>
+            <div class="mg-bar-wrap" id="pic-barwrap" style="display:none"><div class="mg-bar" id="pic-bar"></div></div>
+            <div class="mg-result" id="pic-result"></div>
+            <div class="mg-btn-row">
+              <button class="mg-big-btn" id="pic-start" type="button">▶ Start</button>
+              <button class="mg-big-btn mg-gold" id="pic-next" type="button" style="display:none">Next level →</button>
+            </div>
+          </div>
+
+          <div class="mg-foot">
+            <div class="mg-lockup">MENTAL DYNAMICS · A MENTAL FITNESS COMPANY</div>
+            <div class="mg-cta">Free consultation — <a href="tel:+19548512138">Call or text 954-851-2138</a> · Plantation, FL</div>
+          </div>
+
+          <div id="mg-overlay" role="dialog" aria-modal="true" aria-label="You won">
+            <div class="mg-win-card">
+              <h3>Your mind on hypnotherapy. 🧠✨</h3>
+              <p>Sharp, calm, in control.</p>
+              <p class="mg-score" id="finalscore"></p>
+              <p class="mg-score" id="bestline"></p>
+              <a class="mg-call-btn" href="tel:+19548512138">Free consultation — 954-851-2138</a>
+              <button class="mg-again" id="again" type="button">Play again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="contact" id="contact" aria-labelledby="contact-title">
       <div class="wrap contact-grid">
         <div>
@@ -736,6 +945,355 @@
           if(!isOpen){item.classList.add('open');button.setAttribute('aria-expanded','true');}
         });
       });
+    })();
+  </script>
+  <script>
+    (function(){
+      "use strict";
+      function $(id){ return document.getElementById(id); }
+      function shuffle(a){
+        for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+        return a;
+      }
+      function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); }catch(e){ return null; } }
+
+      /* ---------- Navigation ---------- */
+      var screens = { home:$("scr-home"), cards:$("scr-cards"), numbers:$("scr-numbers"), pictures:$("scr-pictures") };
+      function show(name){
+        for(var k in screens) screens[k].classList.toggle("on", k===name);
+        renderHomeProgress();
+      }
+      var backs = document.querySelectorAll("[data-back]");
+      for(var b=0;b<backs.length;b++) backs[b].addEventListener("click", function(){ show("home"); });
+      $("go-cards").addEventListener("click", function(){ show("cards"); });
+      $("go-numbers").addEventListener("click", function(){ show("numbers"); });
+      $("go-pictures").addEventListener("click", function(){ show("pictures"); });
+
+      function renderHomeProgress(){
+        var n = store("mg_numbers_unlocked") || 1;
+        var p = store("mg_pictures_unlocked") || 1;
+        $("pr-numbers").textContent = n>1 ? ("Progress: level "+Math.min(n,16)+" of 16 unlocked") : "";
+        $("pr-pictures").textContent = p>1 ? ("Progress: level "+Math.min(p,10)+" of 10 unlocked") : "";
+        var cb = store("mentalGymBest_medium");
+        $("pr-cards").textContent = cb ? ("Best (Medium): "+cb.moves+" moves") : "";
+      }
+
+      /* ---------- 5-second flash timer with bar ---------- */
+      function flashTimer(barEl, wrapEl, done){
+        wrapEl.style.display = "block";
+        var start = Date.now(), dur = 5000, raf;
+        (function tick(){
+          var left = Math.max(0, 1 - (Date.now()-start)/dur);
+          barEl.style.width = (left*100)+"%";
+          if(left>0){ raf = requestAnimationFrame(tick); }
+          else { wrapEl.style.display = "none"; done(); }
+        })();
+        return function(){ cancelAnimationFrame(raf); wrapEl.style.display = "none"; };
+      }
+
+      /* ================= CARD MATCH ================= */
+      var PAIRS = [
+        {e:"\u{1F319}", l:"Sleep"},{e:"\u{1F30A}", l:"Calm"},{e:"\u{1F3AF}", l:"Focus"},
+        {e:"\u{1F4AA}", l:"Confidence"},{e:"\u{1F54A}", l:"Peace"},{e:"\u{1F4A1}", l:"Clarity"},
+        {e:"\u{1F525}", l:"Motivation"},{e:"\u{1F9D8}", l:"Balance"},{e:"✨", l:"Energy"},
+        {e:"\u{1F305}", l:"New Beginnings"},{e:"\u{1F3B5}", l:"Harmony"},{e:"\u{1F331}", l:"Growth"}
+      ];
+      var DIFFS = { easy:{pairs:6, cols:3}, medium:{pairs:8, cols:4}, hard:{pairs:12, cols:4} };
+      var board = $("board"), movesEl = $("moves"), timeEl = $("time"), bestEl = $("best"), overlay = $("mg-overlay");
+      var diff = "medium", first = null, second = null, lock = false;
+      var moves = 0, matched = 0, totalPairs = 0, ctimer = null, seconds = 0, started = false;
+      function fmt(s){ return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2); }
+      function bestKey(){ return "mentalGymBest_"+diff; }
+      function readBest(){ var v = store(bestKey()); return (v===undefined||v===null)?null:v; }
+      function renderBest(){ var bb = readBest(); bestEl.textContent = bb===null ? "—" : (bb.moves+" moves · "+fmt(bb.time)); }
+      function startTimer(){ if(started) return; started = true; ctimer = setInterval(function(){ seconds++; timeEl.textContent = fmt(seconds); }, 1000); }
+      function stopTimer(){ if(ctimer){ clearInterval(ctimer); ctimer = null; } }
+      function buildCards(){
+        var cfg = DIFFS[diff]; totalPairs = cfg.pairs;
+        var deck = shuffle(PAIRS.slice(0, cfg.pairs).concat(PAIRS.slice(0, cfg.pairs)));
+        board.innerHTML = ""; board.style.gridTemplateColumns = "repeat("+cfg.cols+", 1fr)";
+        first = second = null; lock = false; moves = 0; matched = 0; seconds = 0; started = false;
+        stopTimer(); movesEl.textContent = "0"; timeEl.textContent = "0:00";
+        overlay.classList.remove("show"); renderBest();
+        deck.forEach(function(card){
+          var el = document.createElement("div");
+          el.className = "mg-card"; el.dataset.label = card.l;
+          el.innerHTML = '<div class="mg-card-inner"><div class="mg-face mg-face-back"></div><div class="mg-face mg-face-front"><div class="mg-emoji">'+card.e+'</div><div class="mg-label">'+card.l+"</div></div></div>";
+          el.addEventListener("click", function(){ flipCard(el); });
+          board.appendChild(el);
+        });
+      }
+      function flipCard(el){
+        if(lock || el.classList.contains("flipped") || el.classList.contains("matched")) return;
+        startTimer(); el.classList.add("flipped");
+        if(!first){ first = el; return; }
+        second = el; moves++; movesEl.textContent = moves;
+        if(first.dataset.label === second.dataset.label){
+          first.classList.add("matched"); second.classList.add("matched");
+          first = second = null; matched++;
+          if(matched === totalPairs) winCards();
+        } else {
+          lock = true; var a = first, bb = second; first = second = null;
+          setTimeout(function(){ a.classList.remove("flipped"); bb.classList.remove("flipped"); lock = false; }, 750);
+        }
+      }
+      function winCards(){
+        stopTimer();
+        var prev = readBest();
+        var isBest = prev===null || moves < prev.moves || (moves === prev.moves && seconds < prev.time);
+        if(isBest) store(bestKey(), {moves:moves, time:seconds});
+        renderBest();
+        $("finalscore").innerHTML = "Finished in <b>"+moves+" moves</b> · <b>"+fmt(seconds)+"</b>";
+        $("bestline").textContent = isBest ? "🏆 New personal best!" : "";
+        setTimeout(function(){ overlay.classList.add("show"); }, 450);
+      }
+      var dbtns = document.querySelectorAll(".mg-controls button");
+      for(var i=0;i<dbtns.length;i++){
+        (function(btn){ btn.addEventListener("click", function(){
+          for(var k=0;k<dbtns.length;k++) dbtns[k].classList.remove("active");
+          btn.classList.add("active"); diff = btn.getAttribute("data-diff"); buildCards();
+        }); })(dbtns[i]);
+      }
+      $("newgame").addEventListener("click", buildCards);
+      $("again").addEventListener("click", buildCards);
+      buildCards();
+
+      /* ================= NUMBER FLASH ================= */
+      var NUM_TIERS = [
+        {digits:1, label:"Single digits"},
+        {digits:2, label:"Double digits"},
+        {digits:3, label:"Triple digits"},
+        {digits:4, label:"Super expert · 4 digits"}
+      ];
+      var NUM_COUNTS = [4,6,8,10];
+      var numLevels = [];
+      NUM_TIERS.forEach(function(t){ NUM_COUNTS.forEach(function(c){ numLevels.push({digits:t.digits, count:c, tier:t.label}); }); });
+      var numSel = 1, numSeq = [], numCancel = null, numPlaying = false;
+      function numUnlocked(){ return store("mg_numbers_unlocked") || 1; }
+      function renderNumLevels(){
+        var grid = $("num-levels"); grid.innerHTML = "";
+        var un = numUnlocked();
+        numLevels.forEach(function(lv, idx){
+          var n = idx+1;
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mg-lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===numSel ? " sel" : "");
+          btn.innerHTML = n + "<small>" + lv.count + " × " + lv.digits + "d</small>";
+          if(n<=un) btn.addEventListener("click", function(){ if(!numPlaying){ numSel = n; renderNumLevels(); numStageLabel(); resetNumStage(); } });
+          grid.appendChild(btn);
+        });
+      }
+      function numStageLabel(){
+        var lv = numLevels[numSel-1];
+        $("num-stage-label").innerHTML = "<b>Level "+numSel+"</b> · "+lv.tier+" · "+lv.count+" numbers";
+      }
+      function resetNumStage(){
+        if(numCancel){ numCancel(); numCancel = null; }
+        numPlaying = false;
+        $("num-stage").innerHTML = '<div class="mg-flash-msg">Tap Start — memorize fast, you get 5 seconds.</div>';
+        $("num-result").textContent = ""; $("num-result").className = "mg-result";
+        $("num-answer").textContent = "";
+        $("num-start").style.display = ""; $("num-start").textContent = "▶ Start";
+        $("num-next").style.display = "none";
+      }
+      function randNum(digits, used){
+        var lo = digits===1 ? 1 : Math.pow(10, digits-1);
+        var hi = digits===1 ? 9 : Math.pow(10, digits)-1;
+        var v, guard = 0;
+        do { v = lo + Math.floor(Math.random()*(hi-lo+1)); guard++; } while(used.indexOf(v)>=0 && guard<60);
+        return v;
+      }
+      $("num-start").addEventListener("click", function(){
+        if(numPlaying) return;
+        var lv = numLevels[numSel-1];
+        var used = []; numSeq = [];
+        for(var i=0;i<lv.count;i++){ var v = randNum(lv.digits, used); used.push(v); numSeq.push(v); }
+        numPlaying = true;
+        $("num-start").style.display = "none"; $("num-next").style.display = "none";
+        $("num-result").textContent = ""; $("num-answer").textContent = "";
+        var html = '<div class="mg-nums">';
+        numSeq.forEach(function(v){ html += '<div class="mg-num d'+lv.digits+'">'+v+"</div>"; });
+        $("num-stage").innerHTML = html + "</div>";
+        numCancel = flashTimer($("num-bar"), $("num-barwrap"), showNumInputs);
+      });
+      function showNumInputs(){
+        numCancel = null;
+        var lv = numLevels[numSel-1];
+        var html = '<div class="mg-inputs">';
+        for(var i=0;i<lv.count;i++) html += '<input class="d'+lv.digits+'" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="Number '+(i+1)+'">';
+        $("num-stage").innerHTML = html + '</div><div class="mg-btn-row"><button class="mg-big-btn" id="num-check" type="button">Check ✓</button></div>';
+        var inputs = $("num-stage").querySelectorAll("input");
+        if(inputs.length) inputs[0].focus();
+        for(var j=0;j<inputs.length;j++){
+          (function(inp, nx){ inp.addEventListener("input", function(){ if(inp.value.length >= lv.digits && nx) nx.focus(); }); })(inputs[j], inputs[j+1]);
+        }
+        $("num-check").addEventListener("click", checkNumbers);
+      }
+      function checkNumbers(){
+        var inputs = $("num-stage").querySelectorAll("input");
+        var allOk = true;
+        for(var i=0;i<inputs.length;i++){
+          var ok = parseInt(inputs[i].value, 10) === numSeq[i];
+          inputs[i].classList.toggle("ok", ok); inputs[i].classList.toggle("no", !ok);
+          if(!ok) allOk = false;
+        }
+        numPlaying = false;
+        if(allOk){
+          var un = numUnlocked();
+          if(numSel === un && numSel < 16) store("mg_numbers_unlocked", numSel+1);
+          $("num-result").textContent = numSel===16 ? "🏆 SUPER EXPERT — you beat the highest level!" : "🎉 Perfect! Level "+(numSel+1)+" unlocked.";
+          $("num-result").className = "mg-result good";
+          $("num-answer").textContent = "Your mind on hypnotherapy. 🧠";
+          if(numSel < 16) $("num-next").style.display = "";
+          $("num-start").style.display = ""; $("num-start").textContent = "↻ Play again";
+          renderNumLevels();
+        } else {
+          $("num-result").textContent = "Not quite — here's the sequence:";
+          $("num-result").className = "mg-result bad";
+          $("num-answer").textContent = numSeq.join("  ·  ");
+          $("num-start").style.display = ""; $("num-start").textContent = "↻ Try again";
+        }
+      }
+      $("num-next").addEventListener("click", function(){
+        if(numSel < 16){ numSel++; renderNumLevels(); numStageLabel(); resetNumStage(); $("num-start").click(); }
+      });
+      renderNumLevels(); numStageLabel(); resetNumStage();
+
+      /* ================= PICTURE FLASH ================= */
+      var PIC_TYPES = [
+        {e:"🚗", name:"cars"}, {e:"🐦", name:"birds"}, {e:"🏠", name:"houses"}, {e:"🏢", name:"buildings"}
+      ];
+      var picLevels = [];
+      [2,4,6,8,10].forEach(function(c){ picLevels.push({mix:false, count:c, label:c+" of one kind"}); });
+      [[2,2],[4,2],[4,4],[6,4],[6,6]].forEach(function(pr){ picLevels.push({mix:true, a:pr[0], b:pr[1], label:pr[0]+" + "+pr[1]+" mixed"}); });
+      var picSel = 1, picAnswer = {}, picPicks = {}, picPlaying = false, picCancel = null;
+      function picUnlocked(){ return store("mg_pictures_unlocked") || 1; }
+      function renderPicLevels(){
+        var grid = $("pic-levels"); grid.innerHTML = "";
+        var un = picUnlocked();
+        picLevels.forEach(function(lv, idx){
+          var n = idx+1;
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "mg-lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===picSel ? " sel" : "");
+          btn.innerHTML = n + "<small>" + (lv.mix ? "mixed" : lv.count+" pics") + "</small>";
+          if(n<=un) btn.addEventListener("click", function(){ if(!picPlaying){ picSel = n; renderPicLevels(); picStageLabel(); resetPicStage(); } });
+          grid.appendChild(btn);
+        });
+      }
+      function picStageLabel(){
+        var lv = picLevels[picSel-1];
+        $("pic-stage-label").innerHTML = "<b>Level "+picSel+"</b> · "+lv.label;
+      }
+      function resetPicStage(){
+        if(picCancel){ picCancel(); picCancel = null; }
+        picPlaying = false;
+        $("pic-stage").innerHTML = '<div class="mg-flash-msg">Tap Start — count fast, you get 5 seconds.</div>';
+        $("pic-result").textContent = ""; $("pic-result").className = "mg-result";
+        $("pic-start").style.display = ""; $("pic-start").textContent = "▶ Start";
+        $("pic-next").style.display = "none";
+      }
+      $("pic-start").addEventListener("click", function(){
+        if(picPlaying) return;
+        var lv = picLevels[picSel-1];
+        var types = shuffle(PIC_TYPES.slice());
+        var items = [];
+        picAnswer = {}; picPicks = {};
+        if(!lv.mix){
+          var t = types[0];
+          picAnswer[t.name] = {count:lv.count, emoji:t.e};
+          for(var i=0;i<lv.count;i++) items.push(t.e);
+        } else {
+          var t1 = types[0], t2 = types[1];
+          picAnswer[t1.name] = {count:lv.a, emoji:t1.e};
+          picAnswer[t2.name] = {count:lv.b, emoji:t2.e};
+          for(var a=0;a<lv.a;a++) items.push(t1.e);
+          for(var b=0;b<lv.b;b++) items.push(t2.e);
+        }
+        shuffle(items);
+        picPlaying = true;
+        $("pic-start").style.display = "none"; $("pic-next").style.display = "none";
+        $("pic-result").textContent = "";
+        var html = '<div class="mg-pics">';
+        items.forEach(function(e, idx){
+          var size = 34 + ((idx*7)%3)*6;
+          var rot = ((idx*13)%17)-8;
+          html += '<span class="mg-pic" style="font-size:'+size+'px; transform:rotate('+rot+'deg);">'+e+"</span>";
+        });
+        $("pic-stage").innerHTML = html + "</div>";
+        picCancel = flashTimer($("pic-bar"), $("pic-barwrap"), showPicQuestions);
+      });
+      function optionsFor(correct){
+        var set = [correct];
+        [1,-1,2,-2,3].forEach(function(d){ var v = correct+d; if(v>=0 && set.indexOf(v)<0 && set.length<4) set.push(v); });
+        return shuffle(set);
+      }
+      function showPicQuestions(){
+        picCancel = null;
+        var html = "";
+        for(var name in picAnswer){
+          var a = picAnswer[name];
+          html += '<div class="mg-q-block" data-q="'+name+'"><div class="mg-q">How many '+a.emoji+" "+name+' did you see?</div><div class="mg-opts">';
+          optionsFor(a.count).forEach(function(v){ html += '<button class="mg-opt" type="button" data-v="'+v+'">'+v+"</button>"; });
+          html += "</div></div>";
+        }
+        html += '<div class="mg-btn-row"><button class="mg-big-btn" id="pic-check" type="button">Check ✓</button></div>';
+        $("pic-stage").innerHTML = html;
+        var blocks = $("pic-stage").querySelectorAll(".mg-q-block");
+        for(var i=0;i<blocks.length;i++){
+          (function(block){
+            var qname = block.getAttribute("data-q");
+            var opts = block.querySelectorAll(".mg-opt");
+            for(var j=0;j<opts.length;j++){
+              (function(opt){ opt.addEventListener("click", function(){
+                for(var k=0;k<opts.length;k++) opts[k].classList.remove("sel");
+                opt.classList.add("sel"); picPicks[qname] = parseInt(opt.getAttribute("data-v"), 10);
+              }); })(opts[j]);
+            }
+          })(blocks[i]);
+        }
+        $("pic-check").addEventListener("click", checkPictures);
+      }
+      function checkPictures(){
+        var allOk = true, answered = true;
+        for(var name in picAnswer){ if(picPicks[name]===undefined) answered = false; }
+        if(!answered){ $("pic-result").textContent = "Pick an answer for each one first."; $("pic-result").className = "mg-result bad"; return; }
+        var blocks = $("pic-stage").querySelectorAll(".mg-q-block");
+        for(var i=0;i<blocks.length;i++){
+          (function(block){
+            var qname = block.getAttribute("data-q");
+            var correct = picAnswer[qname].count;
+            var opts = block.querySelectorAll(".mg-opt");
+            for(var j=0;j<opts.length;j++){
+              var v = parseInt(opts[j].getAttribute("data-v"), 10);
+              if(v === correct) opts[j].classList.add("ok");
+              else if(v === picPicks[qname]) opts[j].classList.add("no");
+            }
+            if(picPicks[qname] !== correct) allOk = false;
+          })(blocks[i]);
+        }
+        picPlaying = false;
+        if(allOk){
+          var un = picUnlocked();
+          if(picSel === un && picSel < 10) store("mg_pictures_unlocked", picSel+1);
+          $("pic-result").textContent = picSel===10 ? "🏆 You beat Picture Flash — every level!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
+          $("pic-result").className = "mg-result good";
+          if(picSel < 10) $("pic-next").style.display = "";
+          $("pic-start").style.display = ""; $("pic-start").textContent = "↻ Play again";
+          renderPicLevels();
+        } else {
+          var parts = [];
+          for(var n2 in picAnswer) parts.push(picAnswer[n2].emoji+" "+n2+": "+picAnswer[n2].count);
+          $("pic-result").textContent = "Close! The answer was — "+parts.join(" · ");
+          $("pic-result").className = "mg-result bad";
+          $("pic-start").style.display = ""; $("pic-start").textContent = "↻ Try again";
+        }
+      }
+      $("pic-next").addEventListener("click", function(){
+        if(picSel < 10){ picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click(); }
+      });
+      renderPicLevels(); picStageLabel(); resetPicStage();
+      renderHomeProgress();
     })();
   </script>
 </body>
