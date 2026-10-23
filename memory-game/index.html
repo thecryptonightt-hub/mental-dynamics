@@ -109,7 +109,8 @@
   }
   .num.d2{min-width:70px;} .num.d3{min-width:88px; font-size:27px;} .num.d4{min-width:106px; font-size:25px;}
   .pics{display:flex; flex-wrap:wrap; gap:8px 12px; justify-content:center; align-items:center; max-width:400px;}
-  .pic{line-height:1;}
+  .pic{line-height:1; display:inline-flex; flex-direction:column; align-items:center;}
+  .brandcap{font-size:9px; font-weight:800; letter-spacing:.6px; margin-top:1px;}
   .flash-msg{font-size:16px; font-weight:700; color:var(--muted); text-align:center;}
   .inputs{display:flex; flex-wrap:wrap; gap:10px; justify-content:center;}
   .inputs input{
@@ -188,7 +189,7 @@
       <button class="game-btn" id="go-pictures">
         <span class="ic">🚗</span>
         <span><span class="tt">Picture Flash</span>
-        <span class="ds" style="display:block;">Cars, birds, houses flash for 5 seconds — then tell us how many you saw. Mixed rounds at the top levels.</span>
+        <span class="ds" style="display:block;">Lions, zebras, Ferraris, Lambos and more flash on screen — count them before they vanish. The clock shrinks from 5s to 2s as you climb.</span>
         <span class="pr" id="pr-pictures" style="display:block;"></span></span>
       </button>
     </div>
@@ -233,7 +234,7 @@
   <section class="screen" id="scr-pictures">
     <button class="back" data-back>← All games</button>
     <h2 class="gtitle">🚗 Picture Flash</h2>
-    <p class="howto">Count what flashes on screen — you get 5 seconds — then tell us how many of each you saw.</p>
+    <p class="howto">Count what flashes on screen, then tell us how many of each you saw. Early levels give you 5 seconds — the top levels give you just 2.</p>
     <div class="level-grid" id="pic-levels"></div>
     <div class="stats"><span id="pic-stage-label"></span></div>
     <div class="stage" id="pic-stage"><div class="flash-msg">Pick a level, then tap Start.</div></div>
@@ -287,15 +288,15 @@
     var n = store("mg_numbers_unlocked") || 1;
     var p = store("mg_pictures_unlocked") || 1;
     $("pr-numbers").textContent = n>1 ? ("Progress: level "+Math.min(n,16)+" of 16 unlocked") : "";
-    $("pr-pictures").textContent = p>1 ? ("Progress: level "+Math.min(p,10)+" of 10 unlocked") : "";
+    $("pr-pictures").textContent = p>1 ? ("Progress: level "+Math.min(p,PIC_MAX)+" of "+PIC_MAX+" unlocked") : "";
     var cb = store("mentalGymBest_medium");
     $("pr-cards").textContent = cb ? ("Best (Medium): "+cb.moves+" moves") : "";
   }
 
   /* ---------- 5-second flash timer with bar ---------- */
-  function flashTimer(barEl, wrapEl, done){
+  function flashTimer(barEl, wrapEl, done, durMs){
     wrapEl.style.display = "block";
-    var start = Date.now(), dur = 5000, raf;
+    var start = Date.now(), dur = durMs || 5000, raf;
     (function tick(){
       var left = Math.max(0, 1 - (Date.now()-start)/dur);
       barEl.style.width = (left*100)+"%";
@@ -472,15 +473,37 @@
   });
   renderNumLevels(); numStageLabel(); resetNumStage();
 
-  /* ================= PICTURE FLASH ================= */
-  var PIC_TYPES = [
-    {e:"🚗", name:"cars"}, {e:"🐦", name:"birds"}, {e:"🏠", name:"houses"}, {e:"🏢", name:"buildings"}
+  /* ================= PICTURE FLASH (v3 — animals, supercars, shrinking clock) ================= */
+  var PIC_TYPES = {
+    lion:    {e:"\u{1F981}", name:"lions"},
+    zebra:   {e:"\u{1F993}", name:"zebras"},
+    tiger:   {e:"\u{1F405}", name:"tigers"},
+    giraffe: {e:"\u{1F992}", name:"giraffes"},
+    ferrari: {e:"\u{1F3CE}\u{FE0F}", name:"Ferraris", brand:"FERRARI", color:"#D64545"},
+    lambo:   {e:"\u{1F3CE}\u{FE0F}", name:"Lambos", brand:"LAMBO", color:"#C77F00"},
+    porsche: {e:"\u{1F3CE}\u{FE0F}", name:"Porsches", brand:"PORSCHE", color:"#0B3A53"}
+  };
+  var picLevels = [
+    {secs:5, items:[["lion",4]]},
+    {secs:5, items:[["zebra",6]]},
+    {secs:4, items:[["tiger",8]]},
+    {secs:4, items:[["ferrari",4],["giraffe",4]]},
+    {secs:4, items:[["lambo",6],["zebra",6]]},
+    {secs:3, items:[["giraffe",10]]},
+    {secs:3, items:[["porsche",5],["lion",5]]},
+    {secs:3, items:[["ferrari",6],["tiger",6]]},
+    {secs:3, items:[["lambo",8],["zebra",8]]},
+    {secs:2, items:[["ferrari",4],["porsche",4],["giraffe",4]]},
+    {secs:2, items:[["lion",5],["tiger",5],["zebra",5]]},
+    {secs:2, items:[["ferrari",6],["lambo",6],["porsche",6]]}
   ];
-  var picLevels = [];
-  [2,4,6,8,10].forEach(function(c){ picLevels.push({mix:false, count:c, label:c+" of one kind"}); });
-  [[2,2],[4,2],[4,4],[6,4],[6,6]].forEach(function(pr){ picLevels.push({mix:true, a:pr[0], b:pr[1], label:pr[0]+" + "+pr[1]+" mixed"}); });
+  var PIC_MAX = picLevels.length;
   var picSel = 1, picAnswer = {}, picPicks = {}, picPlaying = false, picCancel = null;
   function picUnlocked(){ return store("mg_pictures_unlocked") || 1; }
+  function picTotal(lv){ var t=0; lv.items.forEach(function(it){ t+=it[1]; }); return t; }
+  function picDescribe(lv){
+    return lv.items.map(function(it){ return it[1]+" "+PIC_TYPES[it[0]].name; }).join(" + ");
+  }
   function renderPicLevels(){
     var grid = $("pic-levels"); grid.innerHTML = "";
     var un = picUnlocked();
@@ -488,19 +511,19 @@
       var n = idx+1;
       var btn = document.createElement("button");
       btn.className = "lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===picSel ? " sel" : "");
-      btn.innerHTML = n + "<small>" + (lv.mix ? "mixed" : lv.count+" pics") + "</small>";
+      btn.innerHTML = n + "<small>" + lv.secs + "s · " + picTotal(lv) + " pics</small>";
       if(n<=un) btn.addEventListener("click", function(){ if(!picPlaying){ picSel = n; renderPicLevels(); picStageLabel(); resetPicStage(); } });
       grid.appendChild(btn);
     });
   }
   function picStageLabel(){
     var lv = picLevels[picSel-1];
-    $("pic-stage-label").innerHTML = "<b>Level "+picSel+"</b> · "+lv.label;
+    $("pic-stage-label").innerHTML = "<b>Level "+picSel+"</b> · "+picDescribe(lv)+" · ⏱ "+lv.secs+" seconds";
   }
   function resetPicStage(){
     if(picCancel){ picCancel(); picCancel = null; }
     picPlaying = false;
-    $("pic-stage").innerHTML = '<div class="flash-msg">Tap Start — count fast, you get 5 seconds.</div>';
+    $("pic-stage").innerHTML = '<div class="flash-msg">Tap Start — count fast before they vanish.</div>';
     $("pic-result").textContent = ""; $("pic-result").className = "result";
     $("pic-start").style.display = ""; $("pic-start").textContent = "▶ Start";
     $("pic-next").style.display = "none";
@@ -508,32 +531,30 @@
   $("pic-start").addEventListener("click", function(){
     if(picPlaying) return;
     var lv = picLevels[picSel-1];
-    var types = shuffle(PIC_TYPES.slice());
     var items = [];
     picAnswer = {}; picPicks = {};
-    if(!lv.mix){
-      var t = types[0];
-      picAnswer[t.name] = {count:lv.count, emoji:t.e};
-      for(var i=0;i<lv.count;i++) items.push(t.e);
-    } else {
-      var t1 = types[0], t2 = types[1];
-      picAnswer[t1.name] = {count:lv.a, emoji:t1.e};
-      picAnswer[t2.name] = {count:lv.b, emoji:t2.e};
-      for(var a=0;a<lv.a;a++) items.push(t1.e);
-      for(var b=0;b<lv.b;b++) items.push(t2.e);
-    }
+    lv.items.forEach(function(it){
+      var key = it[0], count = it[1], t = PIC_TYPES[key];
+      picAnswer[key] = {count:count, emoji:t.e, name:t.name, brand:t.brand||null, color:t.color||null};
+      for(var i=0;i<count;i++) items.push(key);
+    });
     shuffle(items);
     picPlaying = true;
     $("pic-start").style.display = "none"; $("pic-next").style.display = "none";
     $("pic-result").textContent = "";
     var html = '<div class="pics">';
-    items.forEach(function(e, idx){
-      var size = 34 + ((idx*7)%3)*6;
+    items.forEach(function(key, idx){
+      var t = PIC_TYPES[key];
+      var size = 32 + ((idx*7)%3)*6;
       var rot = ((idx*13)%17)-8;
-      html += '<span class="pic" style="font-size:'+size+'px; transform:rotate('+rot+'deg);">'+e+"</span>";
+      if(t.brand){
+        html += '<span class="pic" style="transform:rotate('+rot+'deg);"><span style="font-size:'+size+'px; line-height:1;">'+t.e+'</span><span class="brandcap" style="color:'+t.color+';">'+t.brand+"</span></span>";
+      } else {
+        html += '<span class="pic" style="font-size:'+size+'px; transform:rotate('+rot+'deg);">'+t.e+"</span>";
+      }
     });
     $("pic-stage").innerHTML = html + "</div>";
-    picCancel = flashTimer($("pic-bar"), $("pic-barwrap"), showPicQuestions);
+    picCancel = flashTimer($("pic-bar"), $("pic-barwrap"), showPicQuestions, lv.secs*1000);
   });
   function optionsFor(correct){
     var set = [correct];
@@ -543,9 +564,11 @@
   function showPicQuestions(){
     picCancel = null;
     var html = "";
-    for(var name in picAnswer){
-      var a = picAnswer[name];
-      html += '<div class="q-block" data-q="'+name+'"><div class="q">How many '+a.emoji+" "+name+" did you see?</div><div class=\"opts\">";
+    for(var key in picAnswer){
+      var a = picAnswer[key];
+      var q = a.brand ? ("How many " + a.emoji + " <span style='color:"+a.color+";'>"+a.brand+"</span> cars did you see?")
+                      : ("How many " + a.emoji + " " + a.name + " did you see?");
+      html += '<div class="q-block" data-q="'+key+'"><div class="q">'+q+'</div><div class="opts">';
       optionsFor(a.count).forEach(function(v){ html += '<button class="opt" data-v="'+v+'">'+v+"</button>"; });
       html += "</div></div>";
     }
@@ -568,7 +591,7 @@
   }
   function checkPictures(){
     var allOk = true, answered = true;
-    for(var name in picAnswer){ if(picPicks[name]===undefined) answered = false; }
+    for(var key in picAnswer){ if(picPicks[key]===undefined) answered = false; }
     if(!answered){ $("pic-result").textContent = "Pick an answer for each one first."; $("pic-result").className = "result bad"; return; }
     var blocks = $("pic-stage").querySelectorAll(".q-block");
     for(var i=0;i<blocks.length;i++){
@@ -587,22 +610,22 @@
     picPlaying = false;
     if(allOk){
       var un = picUnlocked();
-      if(picSel === un && picSel < 10) store("mg_pictures_unlocked", picSel+1);
-      $("pic-result").textContent = picSel===10 ? "🏆 You beat Picture Flash — every level!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
+      if(picSel === un && picSel < PIC_MAX) store("mg_pictures_unlocked", picSel+1);
+      $("pic-result").textContent = picSel===PIC_MAX ? "🏆 You beat Picture Flash — even the 2-second supercar final!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
       $("pic-result").className = "result good";
-      if(picSel < 10) $("pic-next").style.display = "";
+      if(picSel < PIC_MAX) $("pic-next").style.display = "";
       $("pic-start").style.display = ""; $("pic-start").textContent = "↻ Play again";
       renderPicLevels();
     } else {
       var parts = [];
-      for(var n2 in picAnswer) parts.push(picAnswer[n2].emoji+" "+n2+": "+picAnswer[n2].count);
+      for(var k2 in picAnswer) parts.push(picAnswer[k2].emoji+" "+picAnswer[k2].name+": "+picAnswer[k2].count);
       $("pic-result").textContent = "Close! The answer was — "+parts.join(" · ");
       $("pic-result").className = "result bad";
       $("pic-start").style.display = ""; $("pic-start").textContent = "↻ Try again";
     }
   }
   $("pic-next").addEventListener("click", function(){
-    if(picSel < 10){ picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click(); }
+    if(picSel < PIC_MAX){ picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click(); }
   });
   renderPicLevels(); picStageLabel(); resetPicStage();
   renderHomeProgress();
