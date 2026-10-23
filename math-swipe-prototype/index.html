@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Swipe Math — Prototype</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(1200px 800px at 50% -10%, #16305e 0%, #0b1220 55%) fixed, #0b1220;
+    color:#eaf4ff; min-height:100%; padding:14px 14px 30px;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .wrap { width:100%; max-width:520px; display:flex; flex-direction:column; gap:12px; }
+  header { text-align:center; margin-top:4px; }
+  h1 { font-size:34px; letter-spacing:2px; font-weight:800; }
+  h1 .accent { color:#38bdf8; }
+  .proto-tag {
+    display:inline-block; margin-top:6px; font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+    color:#0b1220; background:#fbbf24; font-weight:700; padding:3px 10px; border-radius:999px;
+  }
+  .hud { display:flex; gap:8px; justify-content:space-between; }
+  .hud .box {
+    flex:1; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10);
+    border-radius:14px; padding:8px 6px; text-align:center;
+  }
+  .hud .num { font-size:20px; font-weight:800; color:#7dd3fc; }
+  .hud .lbl { font-size:10px; letter-spacing:1.2px; text-transform:uppercase; color:#9db8d6; margin-top:2px; }
+  .levels { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .chip {
+    border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.05); color:#cfe6ff;
+    font-size:13px; font-weight:700; padding:7px 11px; border-radius:999px; cursor:pointer;
+  }
+  .chip.active { background:#38bdf8; color:#082f49; border-color:#38bdf8; }
+  .chip.master { border-color:#f59e0b; color:#fcd34d; }
+  .chip.master.active { background:#f59e0b; color:#451a03; border-color:#f59e0b; }
+  .card {
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10);
+    border-radius:20px; padding:18px 16px; text-align:center;
+  }
+  .level-name { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:#9db8d6; }
+  .problem { font-size:52px; font-weight:800; letter-spacing:1px; margin:8px 0 4px; font-variant-numeric:tabular-nums; }
+  .answer-row { display:flex; justify-content:center; align-items:center; gap:8px; min-height:58px; }
+  .answer-box {
+    min-width:130px; padding:6px 18px; border-radius:14px; background:#081120;
+    border:2px dashed rgba(125,211,252,.35); font-size:38px; font-weight:800; color:#7dd3fc;
+    letter-spacing:4px; font-variant-numeric:tabular-nums;
+  }
+  .answer-box.correct { border-color:#22c55e; color:#4ade80; }
+  .answer-box.wrong { border-color:#ef4444; color:#f87171; animation:shake .35s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+  .progress { display:flex; gap:6px; justify-content:center; margin-top:10px; }
+  .dot { width:12px; height:12px; border-radius:50%; background:rgba(255,255,255,.15); }
+  .dot.on { background:#22c55e; }
+  .draw-wrap { position:relative; }
+  canvas {
+    width:100%; height:270px; display:block; border-radius:20px; touch-action:none;
+    background:linear-gradient(180deg, rgba(56,189,248,.07), rgba(56,189,248,.02));
+    border:2px solid rgba(56,189,248,.45); cursor:crosshair;
+  }
+  .draw-hint {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center;
+    color:#7d9bbd; font-size:17px; padding:0 30px; pointer-events:none; line-height:1.45;
+  }
+  .controls { display:flex; gap:8px; }
+  .btn {
+    flex:1; border:none; border-radius:14px; padding:15px 6px; font-size:17px; font-weight:800; cursor:pointer;
+    background:rgba(255,255,255,.10); color:#eaf4ff;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn.check { background:#22c55e; color:#052e16; flex:1.4; }
+  .btn.small { flex:0 0 56px; }
+  .feedback { min-height:26px; text-align:center; font-size:17px; font-weight:700; }
+  .feedback.good { color:#4ade80; }
+  .feedback.bad { color:#f87171; }
+  .feedback.info { color:#7dd3fc; }
+  .howto { text-align:center; color:#8fa9c7; font-size:13.5px; line-height:1.5; padding:0 8px; }
+  .keypad { display:none; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .keypad.open { display:grid; }
+  .key {
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); color:#eaf4ff;
+    font-size:22px; font-weight:800; border-radius:12px; padding:13px 0; cursor:pointer; text-align:center;
+  }
+  .overlay {
+    position:fixed; inset:0; background:rgba(3,8,18,.86); display:none; align-items:center; justify-content:center; z-index:20; padding:20px;
+  }
+  .overlay.show { display:flex; }
+  .overlay .panel {
+    background:#0f1e38; border:1px solid rgba(125,211,252,.4); border-radius:22px; padding:28px 22px;
+    text-align:center; max-width:420px; width:100%;
+  }
+  .overlay h2 { font-size:28px; margin-bottom:8px; }
+  .overlay p { color:#b9d2ec; margin-bottom:18px; line-height:1.5; }
+  .overlay .btn { margin-top:8px; width:100%; }
+  .overlay .btn.primary { background:#38bdf8; color:#082f49; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>SWIPE <span class="accent">MATH</span></h1>
+    <div class="proto-tag">Prototype — test version</div>
+  </header>
+
+  <div class="hud">
+    <div class="box"><div class="num" id="hudLevel">1</div><div class="lbl">Level</div></div>
+    <div class="box"><div class="num" id="hudScore">0</div><div class="lbl">Score</div></div>
+    <div class="box"><div class="num" id="hudStreak">0</div><div class="lbl">Streak 🔥</div></div>
+  </div>
+
+  <div class="levels" id="levelChips"></div>
+
+  <div class="card">
+    <div class="level-name" id="levelName">Level 1 · Warm-Up</div>
+    <div class="problem" id="problem">1 + 5 =</div>
+    <div class="answer-row"><div class="answer-box" id="answerBox">_</div></div>
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="draw-wrap">
+    <canvas id="pad"></canvas>
+    <div class="draw-hint" id="drawHint">✍️ Draw each digit of your answer here — one digit at a time</div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btnBack">⌫ Erase</button>
+    <button class="btn" id="btnClear">Clear</button>
+    <button class="btn check" id="btnCheck">✓ Check</button>
+    <button class="btn small" id="btnPad" title="Backup keypad">⌨️</button>
+  </div>
+
+  <div class="keypad" id="keypad"></div>
+
+  <div class="feedback info" id="feedback">Draw your answer — I'll read your finger like handwriting.</div>
+
+  <div class="howto">
+    No typing. The game shows a math problem, you draw the answer digits with your finger
+    in the blue box, and it reads what you drew. Get 5 right to clear the level.
+    Levels 1–10 climb from easy to expert — Master level adds square roots (√).
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <h2 id="ovTitle">Level cleared! 🎉</h2>
+    <p id="ovText"></p>
+    <button class="btn primary" id="ovNext">Next level →</button>
+    <button class="btn" id="ovStay">Keep practicing this level</button>
+  </div>
+</div>
+<script>
+// ===== CORE-RECOGNIZER-START =====
+// Digit templates: each digit is a list of strokes; each stroke is a list of [x, y]
+// points in a 0..100 box (y grows downward, like a screen).
+// Digit templates: each digit maps to a list of VARIANTS; each variant is a list
+// of strokes; each stroke is a list of [x, y] points in a 0..100 box (y down).
+const DIGIT_TEMPLATES = {
+  "0": [ [ [[50,3],[74,8],[90,24],[96,48],[92,72],[76,90],[52,97],[28,92],[11,74],[5,48],[9,25],[26,9],[50,3]] ] ],
+  "1": [ [ [[36,24],[54,7],[56,50],[56,97]] ],
+         [ [[52,6],[54,97]] ],
+         [ [[52,6],[54,97]], [[24,96],[82,96]] ] ],
+  "2": [ [ [[15,26],[24,11],[45,4],[67,7],[81,19],[79,35],[64,53],[33,80],[16,93],[87,93]] ] ],
+  "3": [ [ [[19,15],[41,5],[65,7],[78,19],[70,36],[49,45],[69,51],[81,66],[72,86],[46,96],[23,88],[15,74]] ] ],
+  "4": [ [ [[60,96],[60,8],[15,60],[90,60]] ],
+         [ [[18,12],[12,58],[88,58]], [[58,8],[58,96]] ] ],
+  "5": [ [ [[79,7],[31,7],[27,38],[47,30],[69,37],[81,53],[75,77],[53,91],[28,87],[17,72]] ],
+         [ [[80,6],[28,6],[26,38]], [[47,30],[70,38],[81,56],[73,81],[50,93],[26,87],[17,72]] ] ],
+  "6": [ [ [[72,11],[47,21],[29,45],[22,69],[29,87],[49,96],[69,89],[80,72],[73,54],[53,46],[35,55],[27,71]] ] ],
+  "7": [ [ [[13,9],[87,9],[50,97]] ],
+         [ [[13,9],[87,9],[50,97]], [[33,50],[73,50]] ] ],
+  "8": [ [ [[50,45],[35,34],[30,18],[40,6],[59,4],[71,13],[69,29],[55,43],[48,52],[35,63],[31,79],[42,94],[61,95],[74,84],[72,64],[57,50],[50,45]] ] ],
+  "9": [ [ [[29,87],[53,77],[71,55],[79,33],[71,12],[51,4],[30,11],[21,27],[27,43],[45,51],[63,45],[77,31]] ],
+         [ [[78,30],[60,8],[38,8],[24,24],[26,44],[44,54],[66,48],[78,30],[70,70],[52,92]] ] ]
+};
+
+const NUM_POINTS = 32;
+
+function resamplePoints(points, n) {
+  // points: flat array of [x, y]. Returns n evenly spaced points along the path.
+  const pts = points.map(p => [p[0], p[1]]);
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
+  if (total === 0) return pts.slice(0, 1);
+  const step = total / (n - 1);
+  const out = [pts[0]];
+  let prev = pts[0], acc = 0;
+  for (let i = 1; i < pts.length; i++) {
+    let cur = pts[i];
+    let d = Math.hypot(cur[0]-prev[0], cur[1]-prev[1]);
+    while (acc + d >= step && d > 0) {
+      const t = (step - acc) / d;
+      const np = [prev[0] + t*(cur[0]-prev[0]), prev[1] + t*(cur[1]-prev[1])];
+      out.push(np);
+      prev = np;
+      d = Math.hypot(cur[0]-prev[0], cur[1]-prev[1]);
+      acc = 0;
+    }
+    acc += d;
+    prev = cur;
+  }
+  while (out.length < n) out.push(pts[pts.length-1]);
+  return out.slice(0, n);
+}
+
+function strokesToCloud(strokes) {
+  // $P-style point cloud: densify each stroke's polyline (so a digit defined or
+  // drawn with few points still works), resample, scale to unit box, center.
+  let flat = [];
+  for (const s of strokes) {
+    for (let i = 0; i < s.length; i++) {
+      flat.push(s[i]);
+      if (i + 1 < s.length) {
+        const a = s[i], b = s[i + 1];
+        const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        const steps = Math.floor(d / 2);
+        for (let k = 1; k < steps; k++) flat.push([a[0] + (b[0] - a[0]) * (k / steps), a[1] + (b[1] - a[1]) * (k / steps)]);
+      }
+    }
+  }
+  if (flat.length < 2) return null;
+  let pts = resamplePoints(flat, NUM_POINTS);
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of pts) { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]); }
+  const size = Math.max(maxX - minX, maxY - minY) || 1;
+  pts = pts.map(p => [(p[0]-minX)/size, (p[1]-minY)/size]);
+  let cx = 0, cy = 0;
+  for (const p of pts) { cx += p[0]; cy += p[1]; }
+  cx /= pts.length; cy /= pts.length;
+  return pts.map(p => [p[0]-cx, p[1]-cy]);
+}
+
+function cloudDistance(cloudA, cloudB, start) {
+  const n = cloudA.length;
+  const matched = new Array(n).fill(false);
+  let sum = 0;
+  let i = start;
+  do {
+    let best = Infinity, bestIdx = -1;
+    for (let j = 0; j < n; j++) {
+      if (matched[j]) continue;
+      const d = Math.hypot(cloudA[i][0]-cloudB[j][0], cloudA[i][1]-cloudB[j][1]);
+      if (d < best) { best = d; bestIdx = j; }
+    }
+    matched[bestIdx] = true;
+    const weight = 1 - ((i - start + n) % n) / n;
+    sum += weight * best;
+    i = (i + 1) % n;
+  } while (i !== start);
+  return sum;
+}
+
+function cloudMatch(cloudA, cloudB) {
+  const n = cloudA.length;
+  const step = Math.max(1, Math.floor(Math.sqrt(n)));
+  let best = Infinity;
+  for (let s = 0; s < n; s += step) best = Math.min(best, cloudDistance(cloudA, cloudB, s));
+  return best;
+}
+
+const TEMPLATE_CLOUDS = {};
+for (const d of Object.keys(DIGIT_TEMPLATES)) {
+  TEMPLATE_CLOUDS[d] = DIGIT_TEMPLATES[d].map(variant => strokesToCloud(variant)).filter(Boolean);
+}
+
+// Calibrated from simulated-stroke tests: correct drawings score below this.
+const ACCEPT_DIST = 1.30;
+
+function recognizeDigit(strokes) {
+  const cloud = strokesToCloud(strokes);
+  if (!cloud) return null;
+  let bestDigit = null, bestDist = Infinity, secondDist = Infinity;
+  for (const d of Object.keys(TEMPLATE_CLOUDS)) {
+    for (const tc of TEMPLATE_CLOUDS[d]) {
+      const dist = cloudMatch(cloud, tc);
+      if (dist < bestDist) { secondDist = bestDist; bestDist = dist; bestDigit = d; }
+      else if (dist < secondDist) { secondDist = dist; }
+    }
+  }
+  return { digit: bestDigit, distance: bestDist, margin: secondDist - bestDist };
+}
+// ===== CORE-RECOGNIZER-END =====
+
+// ---------------- Game ----------------
+const $ = id => document.getElementById(id);
+const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+function add(min, max) { const a = rnd(min, max), b = rnd(min, max); return { q: a + " + " + b, a: a + b }; }
+function sub(min, max) { let a = rnd(min, max), b = rnd(min, max); if (b > a) [a, b] = [b, a]; return { q: a + " − " + b, a: a - b }; }
+function mul(aMin, aMax, bMin, bMax) { const a = rnd(aMin, aMax), b = rnd(bMin, bMax); return { q: a + " × " + b, a: a * b }; }
+function div(dMin, dMax, qMin, qMax) { const d = rnd(dMin, dMax), q = rnd(qMin, qMax); return { q: (d * q) + " ÷ " + d, a: q }; }
+function sqrtP(rMin, rMax) { const r = rnd(rMin, rMax); return { q: "√" + (r * r), a: r }; }
+function sqr(aMin, aMax) { const a = rnd(aMin, aMax); return { q: a + "²", a: a * a }; }
+
+const LEVELS = [
+  { name: "Warm-Up",       gens: [() => add(1, 9)] },
+  { name: "Getting Going", gens: [() => add(5, 20), () => sub(5, 20)] },
+  { name: "Hundreds",      gens: [() => add(15, 99), () => sub(15, 99)] },
+  { name: "Times Tables",  gens: [() => mul(2, 9, 2, 9), () => div(2, 9, 2, 9)] },
+  { name: "Double Digits", gens: [() => mul(12, 99, 2, 9), () => div(3, 9, 11, 30)] },
+  { name: "Thousands",     gens: [() => add(120, 999), () => sub(120, 999)] },
+  { name: "Big Multiply",  gens: [() => mul(12, 49, 12, 49), () => div(4, 9, 21, 99)] },
+  { name: "Mixed Bag",     gens: [() => mul(101, 499, 3, 9), () => div(6, 12, 21, 60), () => add(500, 4999), () => sub(500, 4999)] },
+  { name: "Heavy Numbers", gens: [() => mul(21, 99, 21, 99), () => div(12, 25, 21, 75), () => add(1000, 9999), () => sub(1000, 9999)] },
+  { name: "Expert",        gens: [() => mul(101, 299, 21, 49), () => div(15, 35, 31, 85), () => add(5000, 49999), () => sub(5000, 49999)] },
+  { name: "MASTER · Square Roots", master: true,
+    gens: [() => sqrtP(6, 60), () => sqrtP(6, 60), () => sqr(11, 25), () => mul(21, 99, 21, 99), () => div(12, 35, 21, 85)] }
+];
+const GOAL = 5;
+
+let level = 0, score = 0, streak = 0, cleared = 0, attempts = 0;
+let problem = null, entered = "";
+
+// Level chips
+const chipsEl = $("levelChips");
+LEVELS.forEach((lv, i) => {
+  const b = document.createElement("button");
+  b.className = "chip" + (lv.master ? " master" : "");
+  b.textContent = lv.master ? "★ Master" : (i + 1);
+  b.onclick = () => setLevel(i);
+  chipsEl.appendChild(b);
+});
+// Keypad fallback
+const padEl = $("keypad");
+"1234567890".split("").forEach(d => {
+  const k = document.createElement("button");
+  k.className = "key"; k.textContent = d;
+  k.onclick = () => pushDigit(d);
+  padEl.appendChild(k);
+});
+$("btnPad").onclick = () => padEl.classList.toggle("open");
+
+function setLevel(i) {
+  level = i; cleared = 0; attempts = 0;
+  [...chipsEl.children].forEach((c, j) => c.classList.toggle("active", j === i));
+  $("hudLevel").textContent = LEVELS[i].master ? "★" : (i + 1);
+  $("levelName").textContent = (LEVELS[i].master ? "Master Level" : "Level " + (i + 1)) + " · " + LEVELS[i].name;
+  newProblem();
+  setFeedback("Level " + (LEVELS[i].master ? "Master" : (i + 1)) + " — " + LEVELS[i].name + ". Draw your answer!", "info");
+}
+
+function newProblem() {
+  problem = pick(LEVELS[level].gens)();
+  entered = ""; attempts = 0;
+  $("problem").textContent = problem.q + " =";
+  renderAnswer(); renderProgress();
+}
+
+function renderAnswer() {
+  const box = $("answerBox");
+  box.textContent = entered === "" ? "_" : entered;
+  box.classList.remove("correct", "wrong");
+}
+function renderProgress() {
+  const p = $("progress"); p.innerHTML = "";
+  for (let i = 0; i < GOAL; i++) {
+    const d = document.createElement("div");
+    d.className = "dot" + (i < cleared ? " on" : "");
+    p.appendChild(d);
+  }
+}
+function setFeedback(msg, kind) {
+  const f = $("feedback");
+  f.textContent = msg;
+  f.className = "feedback " + (kind || "");
+}
+
+function pushDigit(d) {
+  if (entered.length >= 6) return;
+  entered += d;
+  renderAnswer();
+  tick();
+  const want = String(problem.a).length;
+  if (entered.length === want) setTimeout(checkAnswer, 300);
+}
+
+function checkAnswer() {
+  if (entered === "" || !problem) return;
+  const val = parseInt(entered, 10);
+  const box = $("answerBox");
+  if (val === problem.a) {
+    box.classList.add("correct");
+    streak++; cleared++;
+    const pts = 10 * (level + 1) * (LEVELS[level].master ? 2 : 1);
+    score += pts;
+    $("hudScore").textContent = score;
+    $("hudStreak").textContent = streak;
+    goodSound();
+    renderProgress();
+    if (cleared >= GOAL) {
+      setFeedback("Correct! +" + pts + " 🎉", "good");
+      setTimeout(showLevelClear, 650);
+    } else {
+      setFeedback(pick(["Correct! +" + pts, "Nailed it! +" + pts, "Exactly right! +" + pts, "Too easy for you! +" + pts]), "good");
+      setTimeout(newProblem, 900);
+    }
+  } else {
+    box.classList.add("wrong");
+    streak = 0; attempts++;
+    $("hudStreak").textContent = streak;
+    badSound();
+    if (attempts >= 3) {
+      setFeedback("The answer was " + problem.a + ". Next one — you got this.", "bad");
+      entered = "";
+      setTimeout(() => { renderAnswer(); newProblem(); }, 1400);
+    } else {
+      setFeedback("Not quite — erase and draw it again.", "bad");
+      setTimeout(() => { box.classList.remove("wrong"); }, 400);
+    }
+  }
+}
+
+function showLevelClear() {
+  const last = level >= LEVELS.length - 1;
+  $("ovTitle").textContent = LEVELS[level].master ? "👑 MASTER LEVEL CLEARED!" : "Level " + (level + 1) + " cleared! 🎉";
+  $("ovText").textContent = last
+    ? "You finished the hardest level — square roots and all. Score: " + score
+    : "Five in a row done. Score: " + score + ". Ready for Level " + (level + 2) + " — " + LEVELS[level + 1].name + "?";
+  $("ovNext").style.display = last ? "none" : "block";
+  $("overlay").classList.add("show");
+}
+$("ovNext").onclick = () => { $("overlay").classList.remove("show"); setLevel(level + 1); };
+$("ovStay").onclick = () => { $("overlay").classList.remove("show"); cleared = 0; renderProgress(); newProblem(); };
+
+$("btnBack").onclick = () => { entered = entered.slice(0, -1); renderAnswer(); };
+$("btnClear").onclick = () => { entered = ""; renderAnswer(); clearPad(); };
+$("btnCheck").onclick = checkAnswer;
+
+// ---------------- Drawing pad ----------------
+const canvas = $("pad"), ctx = canvas.getContext("2d");
+let drawing = false, currentStroke = null, pendingStrokes = [], recogTimer = null;
+
+function fitCanvas() {
+  const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineWidth = 11; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#7dd3fc";
+}
+window.addEventListener("resize", fitCanvas);
+
+function padPos(e) {
+  const r = canvas.getBoundingClientRect();
+  return [((e.clientX - r.left) / r.width) * 100, ((e.clientY - r.top) / r.height) * 100, e.clientX - r.left, e.clientY - r.top];
+}
+function clearPad() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+function scheduleRecognize() {
+  clearTimeout(recogTimer);
+  recogTimer = setTimeout(runRecognize, 420);
+}
+function runRecognize() {
+  if (pendingStrokes.length === 0) return;
+  const res = recognizeDigit(pendingStrokes);
+  pendingStrokes = [];
+  clearPad();
+  if (res && res.distance < ACCEPT_DIST) {
+    pushDigit(res.digit);
+    setFeedback("Read that as " + res.digit + " ✓ — keep drawing for more digits.", "info");
+  } else {
+    setFeedback("Didn't catch that — draw the digit again, a little bigger.", "bad");
+    badSound();
+  }
+}
+
+canvas.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+  drawing = true;
+  clearTimeout(recogTimer);
+  const [, , px, py] = padPos(e);
+  const [nx, ny] = padPos(e);
+  currentStroke = [[nx, ny]];
+  ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + 0.1, py + 0.1); ctx.stroke();
+  $("drawHint").style.display = "none";
+});
+canvas.addEventListener("pointermove", e => {
+  if (!drawing || !currentStroke) return;
+  e.preventDefault();
+  const [nx, ny, px, py] = padPos(e);
+  currentStroke.push([nx, ny]);
+  ctx.lineTo(px, py); ctx.stroke();
+});
+function endStroke() {
+  if (!drawing) return;
+  drawing = false;
+  if (currentStroke && currentStroke.length > 1) pendingStrokes.push(currentStroke);
+  currentStroke = null;
+  scheduleRecognize();
+}
+canvas.addEventListener("pointerup", endStroke);
+canvas.addEventListener("pointercancel", endStroke);
+
+// ---------------- Sounds ----------------
+let audioCtx = null;
+function beep(freq, dur, when, type) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.12, audioCtx.currentTime + when);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + when + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(audioCtx.currentTime + when); o.stop(audioCtx.currentTime + when + dur);
+  } catch (e) { /* sound is a bonus, never a blocker */ }
+}
+function tick() { beep(660, 0.06, 0, "triangle"); }
+function goodSound() { beep(523, 0.12, 0); beep(784, 0.18, 0.1); }
+function badSound() { beep(160, 0.2, 0, "sawtooth"); }
+
+// ---------------- Boot ----------------
+fitCanvas();
+setLevel(0);
+</script>
+</body>
+</html>
