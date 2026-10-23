@@ -134,6 +134,11 @@
   .opt.no{background:var(--bad); border-color:var(--bad); color:#fff;}
   .result{font-size:17px; font-weight:800; text-align:center; margin-top:14px; min-height:24px;}
   .result.good{color:var(--good);} .result.bad{color:var(--bad);}
+  .unlock-box{display:none; width:min(94vw,430px); margin-top:14px; background:#FFF7E0; border:2px solid var(--gold); border-radius:16px; padding:16px; text-align:center;}
+  .unlock-box.show{display:block;}
+  .unlock-box .t{font-size:16px; font-weight:800;}
+  .unlock-box .d{font-size:13px; color:var(--muted); margin-top:4px; line-height:1.45;}
+  .buy-btn{display:inline-block; margin-top:10px; background:var(--gold); color:var(--ink); font-weight:800; font-size:15px; padding:12px 24px; border-radius:999px; text-decoration:none;}
   .answer-line{font-size:14px; color:var(--muted); text-align:center; margin-top:6px;}
   .btn-row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
   footer{margin-top:22px; text-align:center; max-width:520px;}
@@ -193,6 +198,7 @@
         <span class="pr" id="pr-pictures" style="display:block;"></span></span>
       </button>
     </div>
+    <p class="tag" style="margin-top:12px; text-align:center;">🎁 Level 1 of every game is free — the full version unlocks all levels for $1.99.</p>
   </section>
 
   <!-- CARD MATCH -->
@@ -211,6 +217,7 @@
     </div>
     <div id="board" aria-label="Memory game board"></div>
     <button class="big-btn" id="newgame">↻ New Game</button>
+    <div class="unlock-box" id="unlock-cards"><div class="t">🔒 Medium &amp; Hard are in the full version</div><div class="d">Easy is always free. The full version unlocks every Card Match difficulty — plus all 16 Number Flash levels and all 12 Picture Flash levels.</div><a class="buy-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a></div>
   </section>
 
   <!-- NUMBER FLASH -->
@@ -228,6 +235,7 @@
       <button class="big-btn" id="num-start">▶ Start</button>
       <button class="big-btn gold" id="num-next" style="display:none;">Next level →</button>
     </div>
+    <div class="unlock-box" id="unlock-numbers"><div class="t">🔒 Levels 2–16 are in the full version</div><div class="d">Level 1 is always free. Unlock all 16 Number Flash levels — right up to four-digit Super Expert.</div><a class="buy-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a></div>
   </section>
 
   <!-- PICTURE FLASH -->
@@ -244,6 +252,7 @@
       <button class="big-btn" id="pic-start">▶ Start</button>
       <button class="big-btn gold" id="pic-next" style="display:none;">Next level →</button>
     </div>
+    <div class="unlock-box" id="unlock-pictures"><div class="t">🔒 Levels 2–12 are in the full version</div><div class="d">Level 1 is always free. Unlock all 12 Picture Flash levels — animals, supercars, and the 2-second rounds.</div><a class="buy-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a></div>
   </section>
 
   <footer>
@@ -264,11 +273,14 @@
 <script>
 (function(){
   "use strict";
+  var FREE_MODE = true;
   function $(id){ return document.getElementById(id); }
   function shuffle(a){
     for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
     return a;
   }
+  function showUnlock(id){ var el = document.getElementById(id); if(el) el.classList.add("show"); }
+  function hideUnlock(id){ var el = document.getElementById(id); if(el) el.classList.remove("show"); }
   function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); }catch(e){ return null; } }
 
   /* ---------- Navigation ---------- */
@@ -359,12 +371,14 @@
     if(isBest) store(bestKey(), {moves:moves, time:seconds});
     renderBest();
     $("finalscore").innerHTML = "Finished in <b>"+moves+" moves</b> · <b>"+fmt(seconds)+"</b>";
-    $("bestline").textContent = isBest ? "🏆 New personal best!" : "";
+    $("bestline").textContent = (isBest ? "🏆 New personal best! " : "") + (FREE_MODE ? "🔒 The full version unlocks Medium & Hard — and every level of Number Flash and Picture Flash — for $1.99." : "");
     setTimeout(function(){ overlay.classList.add("show"); }, 450);
   }
   var dbtns = document.querySelectorAll(".controls button");
   for(var i=0;i<dbtns.length;i++){
     (function(btn){ btn.addEventListener("click", function(){
+      if(FREE_MODE && btn.getAttribute("data-diff") !== "easy"){ showUnlock("unlock-cards"); return; }
+      hideUnlock("unlock-cards");
       for(var k=0;k<dbtns.length;k++) dbtns[k].classList.remove("active");
       btn.classList.add("active"); diff = btn.getAttribute("data-diff"); buildCards();
     }); })(dbtns[i]);
@@ -384,7 +398,7 @@
   var numLevels = [];
   NUM_TIERS.forEach(function(t){ NUM_COUNTS.forEach(function(c){ numLevels.push({digits:t.digits, count:c, tier:t.label}); }); });
   var numSel = 1, numSeq = [], numCancel = null, numPlaying = false;
-  function numUnlocked(){ return store("mg_numbers_unlocked") || 1; }
+  function numUnlocked(){ if(FREE_MODE) return 1; return store("mg_numbers_unlocked") || 1; }
   function renderNumLevels(){
     var grid = $("num-levels"); grid.innerHTML = "";
     var un = numUnlocked();
@@ -393,7 +407,8 @@
       var btn = document.createElement("button");
       btn.className = "lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===numSel ? " sel" : "");
       btn.innerHTML = n + "<small>" + lv.count + " × " + lv.digits + "d</small>";
-      if(n<=un) btn.addEventListener("click", function(){ if(!numPlaying){ numSel = n; renderNumLevels(); numStageLabel(); resetNumStage(); } });
+      if(n<=un) btn.addEventListener("click", function(){ if(!numPlaying){ numSel = n; renderNumLevels(); numStageLabel(); resetNumStage(); hideUnlock("unlock-numbers"); } });
+      else if(FREE_MODE) btn.addEventListener("click", function(){ showUnlock("unlock-numbers"); });
       grid.appendChild(btn);
     });
   }
@@ -455,10 +470,10 @@
     if(allOk){
       var un = numUnlocked();
       if(numSel === un && numSel < 16) store("mg_numbers_unlocked", numSel+1);
-      $("num-result").textContent = numSel===16 ? "🏆 SUPER EXPERT — you beat the highest level!" : "🎉 Perfect! Level "+(numSel+1)+" unlocked.";
+      $("num-result").textContent = FREE_MODE ? "🎉 You beat the free level!" : (numSel===16 ? "🏆 SUPER EXPERT — you beat the highest level!" : "🎉 Perfect! Level "+(numSel+1)+" unlocked.");
       $("num-result").className = "result good";
-      $("num-answer").textContent = "Your mind on hypnotherapy. 🧠";
-      if(numSel < 16) $("num-next").style.display = "";
+      $("num-answer").textContent = FREE_MODE ? "Levels 2–16 are in the full version — unlock them all below." : "Your mind on hypnotherapy. 🧠"; if(FREE_MODE) showUnlock("unlock-numbers");
+      if(numSel < 16 && !FREE_MODE) $("num-next").style.display = "";
       $("num-start").style.display = ""; $("num-start").textContent = "↻ Play again";
       renderNumLevels();
     } else {
@@ -499,7 +514,7 @@
   ];
   var PIC_MAX = picLevels.length;
   var picSel = 1, picAnswer = {}, picPicks = {}, picPlaying = false, picCancel = null;
-  function picUnlocked(){ return store("mg_pictures_unlocked") || 1; }
+  function picUnlocked(){ if(FREE_MODE) return 1; return store("mg_pictures_unlocked") || 1; }
   function picTotal(lv){ var t=0; lv.items.forEach(function(it){ t+=it[1]; }); return t; }
   function picDescribe(lv){
     return lv.items.map(function(it){ return it[1]+" "+PIC_TYPES[it[0]].name; }).join(" + ");
@@ -512,7 +527,8 @@
       var btn = document.createElement("button");
       btn.className = "lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===picSel ? " sel" : "");
       btn.innerHTML = n + "<small>" + lv.secs + "s · " + picTotal(lv) + " pics</small>";
-      if(n<=un) btn.addEventListener("click", function(){ if(!picPlaying){ picSel = n; renderPicLevels(); picStageLabel(); resetPicStage(); } });
+      if(n<=un) btn.addEventListener("click", function(){ if(!picPlaying){ picSel = n; renderPicLevels(); picStageLabel(); resetPicStage(); hideUnlock("unlock-pictures"); } });
+      else if(FREE_MODE) btn.addEventListener("click", function(){ showUnlock("unlock-pictures"); });
       grid.appendChild(btn);
     });
   }
@@ -611,9 +627,9 @@
     if(allOk){
       var un = picUnlocked();
       if(picSel === un && picSel < PIC_MAX) store("mg_pictures_unlocked", picSel+1);
-      $("pic-result").textContent = picSel===PIC_MAX ? "🏆 You beat Picture Flash — even the 2-second supercar final!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
+      $("pic-result").textContent = FREE_MODE ? "🎉 You beat the free level!" : (picSel===PIC_MAX ? "🏆 You beat Picture Flash — even the 2-second supercar final!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.");
       $("pic-result").className = "result good";
-      if(picSel < PIC_MAX) $("pic-next").style.display = "";
+      if(picSel < PIC_MAX && !FREE_MODE) $("pic-next").style.display = ""; if(FREE_MODE) showUnlock("unlock-pictures");
       $("pic-start").style.display = ""; $("pic-start").textContent = "↻ Play again";
       renderPicLevels();
     } else {
