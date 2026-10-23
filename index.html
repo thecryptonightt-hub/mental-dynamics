@@ -348,7 +348,11 @@
     .mg-level-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:430px;margin-bottom:6px}
     .mg-lvl{width:52px;height:52px;border-radius:14px;border:2px solid var(--mg-blue);background:var(--mg-white);color:var(--mg-blue-dark);font-weight:800;font-size:15px;cursor:pointer;position:relative;padding:0}
     .mg-lvl small{display:block;font-size:8.5px;font-weight:700;letter-spacing:.3px;color:var(--mg-muted);text-transform:uppercase}
-    .mg-lvl.locked{opacity:.35;cursor:default}
+    .mg-lvl.locked{opacity:.45;cursor:pointer}
+    .mg-paywall{width:min(100%,430px);margin-top:16px;background:#fffbef;border:2px solid var(--mg-gold);border-radius:16px;padding:18px 16px;text-align:center;box-sizing:border-box}
+    .mg-paywall-t{font-weight:800;font-size:16px;margin:0 0 4px;color:var(--mg-ink)}
+    .mg-paywall-s{font-size:13px;color:var(--mg-muted);margin:0 0 12px}
+    .mg-unlock-btn{display:inline-block;background:var(--mg-gold);color:var(--mg-ink);font-weight:800;font-size:15px;padding:12px 24px;border-radius:999px;text-decoration:none;box-shadow:0 4px 12px rgba(201,147,0,.35)}
     .mg-lvl.done{border-color:var(--mg-good);background:#eafaf2}
     .mg-lvl.sel{background:var(--mg-blue);color:#fff}
     .mg-lvl.sel small{color:var(--mg-sky2)}
@@ -711,14 +715,14 @@
           <div>
             <p class="section-label">New from Mental Dynamics</p>
             <h2 id="gym-title">The Mental Gym — train your brain like a muscle.</h2>
-            <p class="intro" style="margin-top:20px">A memory trainer from Mental Dynamics with three games in one: <strong>Card Match</strong>, <strong>Number Flash</strong> — numbers flash for five seconds, then you type them back across 16 levels, from single digits all the way to four-digit Super Expert — and <strong>Picture Flash</strong> — counting lions, zebras, tigers, giraffes, Ferraris, Lamborghinis and Porsches through 12 levels, with up to four kinds mixed at once and the clock shrinking from five seconds down to two. The full game is right here on this page — pick a game and play.</p>
+            <p class="intro" style="margin-top:20px">A memory trainer from Mental Dynamics with three games in one: <strong>Card Match</strong>, <strong>Number Flash</strong> — numbers flash for five seconds, then you type them back across 16 levels, from single digits all the way to four-digit Super Expert — and <strong>Picture Flash</strong> — counting lions, zebras, tigers, giraffes, Ferraris, Lamborghinis and Porsches through 12 levels, with up to four kinds mixed at once and the clock shrinking from five seconds down to two. Level 1 of every game is free right here on this page — pick a game and try it. Like it? The full game unlocks every level.</p>
           </div>
           <div class="gym-price">
             <h3>Take The Mental Gym with you</h3>
             <p class="price">$1.99</p>
-            <p>Want the game on your phone, away from the website? Tap below to pay $1.99 through our secure Square checkout — all three trainers, every level, and Square sends you straight to the game when you&rsquo;re done.</p>
+            <p>Unlock every level of all three trainers and take the game with you on your phone. Tap below to pay $1.99 through our secure Square checkout — Square sends you straight to the full game when you&rsquo;re done.</p>
             <a class="btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Get The Mental Gym — $1.99</a>
-            <a class="play-link" href="#mental-gym-app">Or play the full game free below ↓</a>
+            <a class="play-link" href="#mental-gym-app">Or play level 1 of every game free below ↓</a>
           </div>
         </div>
 
@@ -726,22 +730,22 @@
           <div class="mg-head">
             <p class="mg-brandline">Mental Dynamics · A Mental Fitness Company</p>
             <h3 class="mg-h1"><span class="mg-star" aria-hidden="true">✦</span> THE MENTAL GYM <span class="mg-star" aria-hidden="true">✦</span></h3>
-            <p class="mg-tag">A memory trainer. Train your brain like a muscle.</p>
+            <p class="mg-tag">A memory trainer. Train your brain like a muscle. Level 1 of every game is free.</p>
           </div>
 
           <div class="mg-screen on" id="scr-home">
             <div class="mg-menu">
               <button class="mg-game-btn" id="go-cards" type="button">
                 <span class="mg-ic" aria-hidden="true">🃏</span>
-                <span><span class="mg-tt">Card Match</span><span class="mg-ds">Flip the cards and find every pair.</span><span class="mg-pr" id="pr-cards"></span></span>
+                <span><span class="mg-tt">Card Match</span><span class="mg-ds">Flip the cards and find every pair. Easy is free — Medium &amp; Hard are in the full game.</span><span class="mg-pr" id="pr-cards"></span></span>
               </button>
               <button class="mg-game-btn" id="go-numbers" type="button">
                 <span class="mg-ic" aria-hidden="true">🔢</span>
-                <span><span class="mg-tt">Number Flash</span><span class="mg-ds">Numbers flash for 5 seconds — then type them back in order. 16 levels, up to four-digit numbers.</span><span class="mg-pr" id="pr-numbers"></span></span>
+                <span><span class="mg-tt">Number Flash</span><span class="mg-ds">Numbers flash for 5 seconds — then type them back in order. 16 levels, up to four-digit numbers. Level 1 is free.</span><span class="mg-pr" id="pr-numbers"></span></span>
               </button>
               <button class="mg-game-btn" id="go-pictures" type="button">
                 <span class="mg-ic" aria-hidden="true">🦁</span>
-                <span><span class="mg-tt">Picture Flash</span><span class="mg-ds">Lions, zebras, Ferraris, Lambos and more flash on screen — 5 seconds at first, down to 2 at the top. Then tell us how many of each you saw.</span><span class="mg-pr" id="pr-pictures"></span></span>
+                <span><span class="mg-tt">Picture Flash</span><span class="mg-ds">Lions, zebras, Ferraris, Lambos and more flash on screen — 5 seconds at first, down to 2 at the top. Then tell us how many of each you saw. Level 1 is free.</span><span class="mg-pr" id="pr-pictures"></span></span>
               </button>
             </div>
           </div>
@@ -750,9 +754,14 @@
             <button class="mg-backbtn" type="button" data-back>← All games</button>
             <h3 class="mg-gtitle">🃏 Card Match</h3>
             <div class="mg-controls" role="group" aria-label="Difficulty">
-              <button type="button" data-diff="easy">Easy · 12</button>
-              <button type="button" data-diff="medium" class="active">Medium · 16</button>
-              <button type="button" data-diff="hard">Hard · 24</button>
+              <button type="button" data-diff="easy" class="active">Easy · 12</button>
+              <button type="button" data-diff="medium">Medium · 16 🔒</button>
+              <button type="button" data-diff="hard">Hard · 24 🔒</button>
+            </div>
+            <div class="mg-paywall" id="cards-paywall" hidden>
+              <p class="mg-paywall-t">🔒 Medium &amp; Hard are part of the full game</p>
+              <p class="mg-paywall-s">One payment unlocks every level of all three games — and Square sends you the full game right after checkout.</p>
+              <a class="mg-unlock-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a>
             </div>
             <div class="mg-stats">
               <span>Moves <b id="moves">0</b></span>
@@ -766,7 +775,7 @@
           <div class="mg-screen" id="scr-numbers">
             <button class="mg-backbtn" type="button" data-back>← All games</button>
             <h3 class="mg-gtitle">🔢 Number Flash</h3>
-            <p class="mg-howto">Memorize the numbers — you get 5 seconds — then type them back <b>in the same order</b>. Beat a level to unlock the next.</p>
+            <p class="mg-howto">Memorize the numbers — you get 5 seconds — then type them back <b>in the same order</b>. Level 1 is free — the full game unlocks all 16 levels.</p>
             <div class="mg-level-grid" id="num-levels"></div>
             <div class="mg-stats"><span id="num-stage-label"></span></div>
             <div class="mg-stage" id="num-stage"><div class="mg-flash-msg">Pick a level, then tap Start.</div></div>
@@ -777,12 +786,17 @@
               <button class="mg-big-btn" id="num-start" type="button">▶ Start</button>
               <button class="mg-big-btn mg-gold" id="num-next" type="button" style="display:none">Next level →</button>
             </div>
+            <div class="mg-paywall" id="num-paywall" hidden>
+              <p class="mg-paywall-t">🔒 Levels 2–16 are part of the full game</p>
+              <p class="mg-paywall-s">One payment unlocks every level of all three games — and Square sends you the full game right after checkout.</p>
+              <a class="mg-unlock-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a>
+            </div>
           </div>
 
           <div class="mg-screen" id="scr-pictures">
             <button class="mg-backbtn" type="button" data-back>← All games</button>
             <h3 class="mg-gtitle">🦁 Picture Flash</h3>
-            <p class="mg-howto">Count what flashes on screen — lions, zebras, tigers, giraffes, Ferraris, Lambos, Porsches and more. You get 5 seconds on the first levels, then the clock drops: 4 seconds, 3 seconds, and just 2 seconds at the top. Mixed rounds pile on more kinds as you climb.</p>
+            <p class="mg-howto">Count what flashes on screen — lions, zebras, tigers, giraffes, Ferraris, Lambos, Porsches and more. You get 5 seconds on the first levels, then the clock drops: 4 seconds, 3 seconds, and just 2 seconds at the top. Mixed rounds pile on more kinds as you climb. Level 1 is free — the full game unlocks all 12 levels.</p>
             <div class="mg-level-grid" id="pic-levels"></div>
             <div class="mg-stats"><span id="pic-stage-label"></span></div>
             <div class="mg-stage" id="pic-stage"><div class="mg-flash-msg">Pick a level, then tap Start.</div></div>
@@ -791,6 +805,11 @@
             <div class="mg-btn-row">
               <button class="mg-big-btn" id="pic-start" type="button">▶ Start</button>
               <button class="mg-big-btn mg-gold" id="pic-next" type="button" style="display:none">Next level →</button>
+            </div>
+            <div class="mg-paywall" id="pic-paywall" hidden>
+              <p class="mg-paywall-t">🔒 Levels 2–12 are part of the full game</p>
+              <p class="mg-paywall-s">One payment unlocks every level of all three games — and Square sends you the full game right after checkout.</p>
+              <a class="mg-unlock-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a>
             </div>
           </div>
 
@@ -958,6 +977,15 @@
       }
       function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); }catch(e){ return null; } }
 
+      /* ---------- Free tier: level 1 of every game is free on this page.
+         Higher levels live in the paid full game (Square checkout). ---------- */
+      var FREE_CAP = 1;
+      function showPaywall(which){
+        var el = $(which+"-paywall");
+        if(el){ el.hidden = false; if(el.scrollIntoView) el.scrollIntoView({block:"nearest"}); }
+      }
+      function hidePaywall(which){ var el = $(which+"-paywall"); if(el) el.hidden = true; }
+
       /* ---------- Navigation ---------- */
       var screens = { home:$("scr-home"), cards:$("scr-cards"), numbers:$("scr-numbers"), pictures:$("scr-pictures") };
       function show(name){
@@ -973,10 +1001,10 @@
       function renderHomeProgress(){
         var n = store("mg_numbers_unlocked") || 1;
         var p = store("mg_pictures_unlocked") || 1;
-        $("pr-numbers").textContent = n>1 ? ("Progress: level "+Math.min(n,16)+" of 16 unlocked") : "";
-        $("pr-pictures").textContent = p>1 ? ("Progress: level "+Math.min(p,12)+" of 12 unlocked") : "";
-        var cb = store("mentalGymBest_medium");
-        $("pr-cards").textContent = cb ? ("Best (Medium): "+cb.moves+" moves") : "";
+        $("pr-numbers").textContent = n>1 ? "Free level complete ✓ — all 16 levels are in the full game" : "";
+        $("pr-pictures").textContent = p>1 ? "Free level complete ✓ — all 12 levels are in the full game" : "";
+        var cb = store("mentalGymBest_easy");
+        $("pr-cards").textContent = cb ? ("Best (Easy): "+cb.moves+" moves") : "";
       }
 
       /* ---------- flash timer with bar (default 5 seconds) ---------- */
@@ -1001,7 +1029,7 @@
       ];
       var DIFFS = { easy:{pairs:6, cols:3}, medium:{pairs:8, cols:4}, hard:{pairs:12, cols:4} };
       var board = $("board"), movesEl = $("moves"), timeEl = $("time"), bestEl = $("best"), overlay = $("mg-overlay");
-      var diff = "medium", first = null, second = null, lock = false;
+      var diff = "easy", first = null, second = null, lock = false;
       var moves = 0, matched = 0, totalPairs = 0, ctimer = null, seconds = 0, started = false;
       function fmt(s){ return Math.floor(s/60)+":"+("0"+(s%60)).slice(-2); }
       function bestKey(){ return "mentalGymBest_"+diff; }
@@ -1051,8 +1079,11 @@
       var dbtns = document.querySelectorAll(".mg-controls button");
       for(var i=0;i<dbtns.length;i++){
         (function(btn){ btn.addEventListener("click", function(){
+          var nd = btn.getAttribute("data-diff");
+          if(nd !== "easy"){ showPaywall("cards"); return; }
+          hidePaywall("cards");
           for(var k=0;k<dbtns.length;k++) dbtns[k].classList.remove("active");
-          btn.classList.add("active"); diff = btn.getAttribute("data-diff"); buildCards();
+          btn.classList.add("active"); diff = nd; buildCards();
         }); })(dbtns[i]);
       }
       $("newgame").addEventListener("click", buildCards);
@@ -1070,7 +1101,7 @@
       var numLevels = [];
       NUM_TIERS.forEach(function(t){ NUM_COUNTS.forEach(function(c){ numLevels.push({digits:t.digits, count:c, tier:t.label}); }); });
       var numSel = 1, numSeq = [], numCancel = null, numPlaying = false;
-      function numUnlocked(){ return store("mg_numbers_unlocked") || 1; }
+      function numUnlocked(){ return Math.min(store("mg_numbers_unlocked") || 1, FREE_CAP); }
       function renderNumLevels(){
         var grid = $("num-levels"); grid.innerHTML = "";
         var un = numUnlocked();
@@ -1080,7 +1111,8 @@
           btn.type = "button";
           btn.className = "mg-lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===numSel ? " sel" : "");
           btn.innerHTML = n + "<small>" + lv.count + " × " + lv.digits + "d</small>";
-          if(n<=un) btn.addEventListener("click", function(){ if(!numPlaying){ numSel = n; renderNumLevels(); numStageLabel(); resetNumStage(); } });
+          if(n<=un) btn.addEventListener("click", function(){ if(!numPlaying){ numSel = n; hidePaywall("num"); renderNumLevels(); numStageLabel(); resetNumStage(); } });
+          else btn.addEventListener("click", function(){ showPaywall("num"); });
           grid.appendChild(btn);
         });
       }
@@ -1091,6 +1123,7 @@
       function resetNumStage(){
         if(numCancel){ numCancel(); numCancel = null; }
         numPlaying = false;
+        hidePaywall("num");
         $("num-stage").innerHTML = '<div class="mg-flash-msg">Tap Start — memorize fast, you get 5 seconds.</div>';
         $("num-result").textContent = ""; $("num-result").className = "mg-result";
         $("num-answer").textContent = "";
@@ -1106,6 +1139,8 @@
       }
       $("num-start").addEventListener("click", function(){
         if(numPlaying) return;
+        if(numSel > FREE_CAP){ showPaywall("num"); return; }
+        hidePaywall("num");
         var lv = numLevels[numSel-1];
         var used = []; numSeq = [];
         for(var i=0;i<lv.count;i++){ var v = randNum(lv.digits, used); used.push(v); numSeq.push(v); }
@@ -1142,10 +1177,17 @@
         if(allOk){
           var un = numUnlocked();
           if(numSel === un && numSel < 16) store("mg_numbers_unlocked", numSel+1);
-          $("num-result").textContent = numSel===16 ? "🏆 SUPER EXPERT — you beat the highest level!" : "🎉 Perfect! Level "+(numSel+1)+" unlocked.";
-          $("num-result").className = "mg-result good";
-          $("num-answer").textContent = "Your mind on hypnotherapy. 🧠";
-          if(numSel < 16) $("num-next").style.display = "";
+          if(numSel >= FREE_CAP && numSel < 16){
+            $("num-result").textContent = "🎉 Perfect! You beat the free level.";
+            $("num-result").className = "mg-result good";
+            $("num-answer").textContent = "Your mind on hypnotherapy. 🧠";
+            showPaywall("num");
+          } else {
+            $("num-result").textContent = numSel===16 ? "🏆 SUPER EXPERT — you beat the highest level!" : "🎉 Perfect! Level "+(numSel+1)+" unlocked.";
+            $("num-result").className = "mg-result good";
+            $("num-answer").textContent = "Your mind on hypnotherapy. 🧠";
+            if(numSel < 16) $("num-next").style.display = "";
+          }
           $("num-start").style.display = ""; $("num-start").textContent = "↻ Play again";
           renderNumLevels();
         } else {
@@ -1156,7 +1198,10 @@
         }
       }
       $("num-next").addEventListener("click", function(){
-        if(numSel < 16){ numSel++; renderNumLevels(); numStageLabel(); resetNumStage(); $("num-start").click(); }
+        if(numSel < 16){
+          if(numSel+1 > FREE_CAP){ showPaywall("num"); return; }
+          numSel++; renderNumLevels(); numStageLabel(); resetNumStage(); $("num-start").click();
+        }
       });
       renderNumLevels(); numStageLabel(); resetNumStage();
 
@@ -1195,7 +1240,7 @@
         return lv.counts.join(" + ")+" mixed · "+lv.secs+" seconds to look";
       }
       var picSel = 1, picAnswer = {}, picPicks = {}, picPlaying = false, picCancel = null;
-      function picUnlocked(){ return store("mg_pictures_unlocked") || 1; }
+      function picUnlocked(){ return Math.min(store("mg_pictures_unlocked") || 1, FREE_CAP); }
       function renderPicLevels(){
         var grid = $("pic-levels"); grid.innerHTML = "";
         var un = picUnlocked();
@@ -1205,7 +1250,8 @@
           btn.type = "button";
           btn.className = "mg-lvl" + (n>un ? " locked" : "") + (n<un ? " done" : "") + (n===picSel ? " sel" : "");
           btn.innerHTML = n + "<small>" + (lv.counts.length>1 ? "mixed" : lv.counts[0]+" pics") + " · " + lv.secs + "s</small>";
-          if(n<=un) btn.addEventListener("click", function(){ if(!picPlaying){ picSel = n; renderPicLevels(); picStageLabel(); resetPicStage(); } });
+          if(n<=un) btn.addEventListener("click", function(){ if(!picPlaying){ picSel = n; hidePaywall("pic"); renderPicLevels(); picStageLabel(); resetPicStage(); } });
+          else btn.addEventListener("click", function(){ showPaywall("pic"); });
           grid.appendChild(btn);
         });
       }
@@ -1216,6 +1262,7 @@
       function resetPicStage(){
         if(picCancel){ picCancel(); picCancel = null; }
         picPlaying = false;
+        hidePaywall("pic");
         var lv = picLevels[picSel-1];
         $("pic-stage").innerHTML = '<div class="mg-flash-msg">Tap Start — count fast, you get '+lv.secs+' seconds.</div>';
         $("pic-result").textContent = ""; $("pic-result").className = "mg-result";
@@ -1224,6 +1271,8 @@
       }
       $("pic-start").addEventListener("click", function(){
         if(picPlaying) return;
+        if(picSel > FREE_CAP){ showPaywall("pic"); return; }
+        hidePaywall("pic");
         var lv = picLevels[picSel-1];
         var types = shuffle(PIC_TYPES.slice());
         var items = [];
@@ -1301,9 +1350,15 @@
         if(allOk){
           var un = picUnlocked();
           if(picSel === un && picSel < picLevels.length) store("mg_pictures_unlocked", picSel+1);
-          $("pic-result").textContent = picSel===picLevels.length ? "🏆 You beat Picture Flash — every level, down to the 2-second rounds!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
-          $("pic-result").className = "mg-result good";
-          if(picSel < picLevels.length) $("pic-next").style.display = "";
+          if(picSel >= FREE_CAP && picSel < picLevels.length){
+            $("pic-result").textContent = "🎉 Perfect! You beat the free level.";
+            $("pic-result").className = "mg-result good";
+            showPaywall("pic");
+          } else {
+            $("pic-result").textContent = picSel===picLevels.length ? "🏆 You beat Picture Flash — every level, down to the 2-second rounds!" : "🎉 Perfect! Level "+(picSel+1)+" unlocked.";
+            $("pic-result").className = "mg-result good";
+            if(picSel < picLevels.length) $("pic-next").style.display = "";
+          }
           $("pic-start").style.display = ""; $("pic-start").textContent = "↻ Play again";
           renderPicLevels();
         } else {
@@ -1315,7 +1370,10 @@
         }
       }
       $("pic-next").addEventListener("click", function(){
-        if(picSel < picLevels.length){ picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click(); }
+        if(picSel < picLevels.length){
+          if(picSel+1 > FREE_CAP){ showPaywall("pic"); return; }
+          picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click();
+        }
       });
       renderPicLevels(); picStageLabel(); resetPicStage();
       renderHomeProgress();
