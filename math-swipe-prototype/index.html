@@ -41,7 +41,13 @@
     border-radius:20px; padding:18px 16px; text-align:center;
   }
   .level-name { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:#9db8d6; }
-  .problem { font-size:52px; font-weight:800; letter-spacing:1px; margin:8px 0 4px; font-variant-numeric:tabular-nums; }
+  .problem { font-size:52px; font-weight:800; letter-spacing:1px; margin:8px 0 2px; font-variant-numeric:tabular-nums; }
+  .timer-row { display:flex; justify-content:center; gap:8px; align-items:center; margin:2px 0 6px; }
+  .timer {
+    font-size:17px; font-weight:800; color:#fcd34d; background:rgba(245,158,11,.12);
+    border:1px solid rgba(245,158,11,.35); padding:3px 12px; border-radius:999px; font-variant-numeric:tabular-nums;
+  }
+  .par { font-size:12px; color:#9db8d6; }
   .answer-row { display:flex; justify-content:center; align-items:center; gap:8px; min-height:58px; }
   .answer-box {
     min-width:130px; padding:6px 18px; border-radius:14px; background:#081120;
@@ -115,30 +121,31 @@
   <div class="card">
     <div class="level-name" id="levelName">Level 1 · Warm-Up</div>
     <div class="problem" id="problem">1 + 5 =</div>
+    <div class="timer-row"><div class="timer" id="timer">⏱ 0.0s</div><div class="par" id="parLabel"></div></div>
     <div class="answer-row"><div class="answer-box" id="answerBox">_</div></div>
     <div class="progress" id="progress"></div>
   </div>
 
   <div class="draw-wrap">
     <canvas id="pad"></canvas>
-    <div class="draw-hint" id="drawHint">✍️ Draw each digit of your answer here — one digit at a time</div>
+    <div class="draw-hint" id="drawHint">✍️ Write the WHOLE answer here at once — like on paper</div>
   </div>
 
   <div class="controls">
-    <button class="btn" id="btnBack">⌫ Erase</button>
     <button class="btn" id="btnClear">Clear</button>
-    <button class="btn check" id="btnCheck">✓ Check</button>
+    <button class="btn check" id="btnCheck">✓ Check it</button>
     <button class="btn small" id="btnPad" title="Backup keypad">⌨️</button>
   </div>
 
   <div class="keypad" id="keypad"></div>
 
-  <div class="feedback info" id="feedback">Draw your answer — I'll read your finger like handwriting.</div>
+  <div class="feedback info" id="feedback">Write the whole answer at once — messy is fine, fast is better. ⚡</div>
 
   <div class="howto">
-    No typing. The game shows a math problem, you draw the answer digits with your finger
-    in the blue box, and it reads what you drew. Get 5 right to clear the level.
-    Levels 1–10 climb from easy to expert — Master level adds square roots (√).
+    No typing, no pausing between digits. Write the full answer with your finger, the way
+    you'd write it on paper — big, small, sloppy, all fine. The clock starts with each
+    problem: beat the par time and your points grow. 5 correct answers clear the level.
+    Levels 1–10 climb to expert — Master adds square roots (√).
   </div>
 </div>
 
@@ -152,36 +159,80 @@
 </div>
 <script>
 // ===== CORE-RECOGNIZER-START =====
-// Digit templates: each digit is a list of strokes; each stroke is a list of [x, y]
-// points in a 0..100 box (y grows downward, like a screen).
-// Digit templates: each digit maps to a list of VARIANTS; each variant is a list
-// of strokes; each stroke is a list of [x, y] points in a 0..100 box (y down).
+// Digit styles: each digit maps to several STYLES people actually draw with a
+// finger (neat, sloppy, S-shaped 5, two-circle 8, stemmy 6...). Each style is a
+// list of strokes; each stroke is a list of [x, y] points in a 0..100 box (y down).
+// Every style is also matched at three widths (squished / normal / stretched),
+// because finger writing is never template-shaped. Matching ALWAYS returns its
+// best guess — no "can't read that" dead ends.
 const DIGIT_TEMPLATES = {
-  "0": [ [ [[50,3],[74,8],[90,24],[96,48],[92,72],[76,90],[52,97],[28,92],[11,74],[5,48],[9,25],[26,9],[50,3]] ] ],
-  "1": [ [ [[36,24],[54,7],[56,50],[56,97]] ],
-         [ [[52,6],[54,97]] ],
-         [ [[52,6],[54,97]], [[24,96],[82,96]] ] ],
-  "2": [ [ [[15,26],[24,11],[45,4],[67,7],[81,19],[79,35],[64,53],[33,80],[16,93],[87,93]] ] ],
-  "3": [ [ [[19,15],[41,5],[65,7],[78,19],[70,36],[49,45],[69,51],[81,66],[72,86],[46,96],[23,88],[15,74]] ] ],
-  "4": [ [ [[60,96],[60,8],[15,60],[90,60]] ],
-         [ [[18,12],[12,58],[88,58]], [[58,8],[58,96]] ] ],
-  "5": [ [ [[79,7],[31,7],[27,38],[47,30],[69,37],[81,53],[75,77],[53,91],[28,87],[17,72]] ],
-         [ [[80,6],[28,6],[26,38]], [[47,30],[70,38],[81,56],[73,81],[50,93],[26,87],[17,72]] ],
-         [ [[82,6],[26,6],[24,44],[56,36],[80,50],[76,76],[52,92],[26,88],[16,70]] ],
-         [ [[22,8],[52,6],[80,8],[77,28],[70,36],[79,50],[78,68],[64,84],[44,90],[26,84],[16,68]] ],
-         [ [[22,8],[80,8]], [[32,26],[28,44],[34,62],[50,76],[68,76],[78,64],[74,50],[60,46]] ] ],
-  "6": [ [ [[72,11],[47,21],[29,45],[22,69],[29,87],[49,96],[69,89],[80,72],[73,54],[53,46],[35,55],[27,71]] ] ],
-  "7": [ [ [[13,9],[87,9],[50,97]] ],
-         [ [[13,9],[87,9],[50,97]], [[33,50],[73,50]] ] ],
-  "8": [ [ [[50,45],[35,34],[30,18],[40,6],[59,4],[71,13],[69,29],[55,43],[48,52],[35,63],[31,79],[42,94],[61,95],[74,84],[72,64],[57,50],[50,45]] ] ],
-  "9": [ [ [[29,87],[53,77],[71,55],[79,33],[71,12],[51,4],[30,11],[21,27],[27,43],[45,51],[63,45],[77,31]] ],
-         [ [[78,30],[60,8],[38,8],[24,24],[26,44],[44,54],[66,48],[78,30],[70,70],[52,92]] ] ]
+  "0": [
+    [ [[50,3],[74,8],[90,24],[96,48],[92,72],[76,90],[52,97],[28,92],[11,74],[5,48],[9,25],[26,9],[50,3]] ],
+    [ [[58,4],[84,16],[94,44],[84,76],[56,96],[28,88],[10,58],[14,26],[34,8],[58,4]] ],
+    [ [[50,2],[70,10],[80,34],[78,66],[66,90],[46,98],[28,88],[18,60],[20,30],[32,10],[50,2]] ]
+  ],
+  "1": [
+    [ [[36,24],[54,7],[56,50],[56,97]] ],
+    [ [[52,6],[54,97]] ],
+    [ [[52,6],[54,97]], [[24,96],[82,96]] ],
+    [ [[40,20],[60,4],[50,50],[43,97]] ]
+  ],
+  "2": [
+    [ [[15,26],[24,11],[45,4],[67,7],[81,19],[79,35],[64,53],[33,80],[16,93],[87,93]] ],
+    [ [[20,14],[44,6],[70,8],[80,20],[66,44],[24,84],[16,94],[86,94]] ],
+    [ [[16,28],[26,10],[50,4],[72,12],[74,30],[52,52],[26,76],[18,90],[44,95],[76,92],[90,86]] ]
+  ],
+  "3": [
+    [ [[19,15],[41,5],[65,7],[78,19],[70,36],[49,45],[69,51],[81,66],[72,86],[46,96],[23,88],[15,74]] ],
+    [ [[16,10],[84,10],[58,44],[76,54],[82,72],[66,92],[36,95],[16,84]] ],
+    [ [[22,12],[48,5],[72,10],[74,26],[52,44],[76,56],[78,76],[58,93],[30,92],[18,78]] ],
+    [ [[15,17],[43,4],[69,11],[71,31],[47,43],[71,53],[79,73],[61,94],[29,96],[13,81]] ]
+  ],
+  "4": [
+    [ [[60,96],[60,8],[15,60],[90,60]] ],
+    [ [[18,12],[12,58],[88,58]], [[58,8],[58,96]] ],
+    [ [[66,98],[68,16],[64,6],[22,62],[94,62]] ],
+    [ [[70,98],[72,10],[26,64],[94,64]] ]
+  ],
+  "5": [
+    [ [[79,7],[31,7],[27,38],[47,30],[69,37],[81,53],[75,77],[53,91],[28,87],[17,72]] ],
+    [ [[80,6],[28,6],[26,38]], [[47,30],[70,38],[81,56],[73,81],[50,93],[26,87],[17,72]] ],
+    [ [[82,6],[26,6],[24,44],[56,36],[80,50],[76,76],[52,92],[26,88],[16,70]] ],
+    [ [[80,14],[58,6],[34,12],[26,28],[36,44],[58,52],[74,62],[76,78],[60,92],[36,94],[20,84]] ],
+    [ [[70,8],[30,8],[28,40],[50,34],[72,44],[78,62],[66,86],[42,94],[22,86],[16,74]] ]
+  ],
+  "6": [
+    [ [[72,11],[47,21],[29,45],[22,69],[29,87],[49,96],[69,89],[80,72],[73,54],[53,46],[35,55],[27,71]] ],
+    [ [[60,4],[46,24],[34,48],[28,70],[34,88],[52,96],[70,89],[79,73],[70,55],[50,50],[34,62],[29,76]] ],
+    [ [[58,8],[40,28],[30,54],[28,74],[40,90],[58,95],[74,86],[80,68],[72,52],[54,47],[38,56],[31,72]] ],
+    [ [[70,16],[44,30],[28,58],[30,80],[46,92],[66,88],[76,70],[64,54],[44,56],[32,70]] ],
+    [ [[74,6],[52,28],[36,56],[30,74],[40,89],[60,93],[73,80],[66,61],[47,57],[33,70]] ],
+    [ [[48,90],[29,82],[24,62],[35,48],[57,47],[71,60],[66,80],[50,90],[56,62],[68,34],[82,12]] ]
+  ],
+  "7": [
+    [ [[13,9],[87,9],[50,97]] ],
+    [ [[13,9],[87,9],[50,97]], [[33,50],[73,50]] ],
+    [ [[22,22],[30,8],[88,8],[52,97]] ],
+    [ [[8,8],[92,8],[44,97]] ]
+  ],
+  "8": [
+    [ [[50,45],[35,34],[30,18],[40,6],[59,4],[71,13],[69,29],[55,43],[48,52],[35,63],[31,79],[42,94],[61,95],[74,84],[72,64],[57,50],[50,45]] ],
+    [ [[50,6],[64,10],[68,22],[58,32],[44,30],[36,18],[44,7],[50,6],[62,38],[76,48],[78,66],[66,86],[48,94],[30,86],[22,66],[30,46],[50,38]] ],
+    [ [[50,5],[72,26],[50,48],[74,70],[52,95],[28,72],[48,48],[26,24],[50,5]] ],
+    [ [[50,8],[62,12],[60,26],[46,30],[36,20],[42,9],[50,8],[66,40],[78,58],[72,82],[54,95],[32,88],[24,64],[34,42],[50,32]] ],
+    [ [[50,5],[65,11],[67,24],[54,32],[38,27],[32,13],[41,5],[50,5]], [[52,37],[71,45],[75,64],[62,87],[41,89],[27,72],[33,49],[52,37]] ],
+    [ [[64,14],[46,4],[30,14],[44,40],[62,66],[70,86],[52,96],[32,86],[40,58],[56,34],[64,14]] ]
+  ],
+  "9": [
+    [ [[29,87],[53,77],[71,55],[79,33],[71,12],[51,4],[30,11],[21,27],[27,43],[45,51],[63,45],[77,31]] ],
+    [ [[78,30],[60,8],[38,8],[24,24],[26,44],[44,54],[66,48],[78,30],[70,70],[52,92]] ],
+    [ [[50,5],[68,10],[78,26],[72,42],[56,50],[38,44],[26,28],[32,12],[50,5],[74,34],[66,66],[54,95]] ]
+  ]
 };
 
 const NUM_POINTS = 32;
 
 function resamplePoints(points, n) {
-  // points: flat array of [x, y]. Returns n evenly spaced points along the path.
   const pts = points.map(p => [p[0], p[1]]);
   let total = 0;
   for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
@@ -208,8 +259,7 @@ function resamplePoints(points, n) {
 }
 
 function strokesToCloud(strokes) {
-  // $P-style point cloud: densify each stroke's polyline (so a digit defined or
-  // drawn with few points still works), resample, scale to unit box, center.
+  // $P-style point cloud: densify each stroke's polyline, resample, scale, center.
   let flat = [];
   for (const s of strokes) {
     for (let i = 0; i < s.length; i++) {
@@ -262,45 +312,108 @@ function cloudMatch(cloudA, cloudB) {
   return best;
 }
 
-const TEMPLATE_CLOUDS = {};
-for (const d of Object.keys(DIGIT_TEMPLATES)) {
-  TEMPLATE_CLOUDS[d] = DIGIT_TEMPLATES[d].map(variant => strokesToCloud(variant)).filter(Boolean);
+function scaleStrokesX(strokes, f) {
+  return strokes.map(s => s.map(([x, y]) => [50 + (x - 50) * f, y]));
 }
 
-// Calibrated from simulated-stroke tests: correct drawings score below this.
-const ACCEPT_DIST = 1.30;
-
-// Direction-invariant matching: people draw the same digit in opposite stroke
-// directions (e.g. the top bar of a 5 left-to-right vs right-to-left). Test the
-// drawn strokes as-is AND with each stroke reversed (stroke order kept), plus the
-// fully reversed order for multi-stroke digits. Cheap at 32 points/cloud.
-function inputClouds(strokes) {
-  const clouds = [];
-  const fwd = strokesToCloud(strokes);
-  if (fwd) clouds.push(fwd);
-  const revEach = strokesToCloud(strokes.map(s => s.slice().reverse()));
-  if (revEach && revEach !== fwd) clouds.push(revEach);
-  if (strokes.length > 1) {
-    const revAll = strokesToCloud(strokes.slice().reverse().map(s => s.slice().reverse()));
-    if (revAll) clouds.push(revAll);
+// Template library: every style at three widths.
+const TEMPLATE_CLOUDS = {};
+for (const d of Object.keys(DIGIT_TEMPLATES)) {
+  TEMPLATE_CLOUDS[d] = [];
+  for (const style of DIGIT_TEMPLATES[d]) {
+    for (const f of [0.72, 1.0, 1.38]) {
+      const c = strokesToCloud(scaleStrokesX(style, f));
+      if (c) TEMPLATE_CLOUDS[d].push(c);
+    }
   }
-  return clouds;
 }
 
 function recognizeDigit(strokes) {
-  const clouds = inputClouds(strokes);
-  if (clouds.length === 0) return null;
+  const cloud = strokesToCloud(strokes);
+  if (!cloud) return null;
   let bestDigit = null, bestDist = Infinity, secondDist = Infinity;
   for (const d of Object.keys(TEMPLATE_CLOUDS)) {
     for (const tc of TEMPLATE_CLOUDS[d]) {
-      for (const cloud of clouds) {
-        const dist = cloudMatch(cloud, tc);
-        if (dist < bestDist) { secondDist = bestDist; bestDist = dist; bestDigit = d; }
-        else if (dist < secondDist) { secondDist = dist; }
-      }
+      const dist = cloudMatch(cloud, tc);
+      if (dist < bestDist) { secondDist = bestDist; bestDist = dist; bestDigit = d; }
+      else if (dist < secondDist) { secondDist = dist; }
     }
   }
   return { digit: bestDigit, distance: bestDist, margin: secondDist - bestDist };
+}
+
+// Split a pile of strokes (a whole handwritten number) into per-digit groups,
+// left to right. Strokes that overlap horizontally belong to the same digit
+// (crossbars, two-stroke 4s and 5s). expectedCount — which the game always
+// knows — is used to merge or split groups until the count fits.
+function strokeBox(s) {
+  let minX = Infinity, maxX = -Infinity, sumX = 0;
+  for (const p of s) { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); sumX += p[0]; }
+  return { minX, maxX, cx: sumX / s.length };
+}
+function groupBox(g) {
+  let minX = Infinity, maxX = -Infinity;
+  for (const s of g) { const b = strokeBox(s); minX = Math.min(minX, b.minX); maxX = Math.max(maxX, b.maxX); }
+  return { minX, maxX };
+}
+
+function segmentStrokes(strokes, expectedCount) {
+  if (strokes.length === 0) return [];
+  const sorted = strokes.slice().sort((a, b) => strokeBox(a).cx - strokeBox(b).cx);
+  const GAP = 7;
+  let groups = [[sorted[0]]];
+  for (let i = 1; i < sorted.length; i++) {
+    const cur = groups[groups.length - 1];
+    const cb = groupBox(cur), nb = strokeBox(sorted[i]);
+    if (nb.minX <= cb.maxX + GAP) cur.push(sorted[i]);
+    else groups.push([sorted[i]]);
+  }
+  // Merge closest neighbours until the count fits.
+  while (groups.length > expectedCount) {
+    let bestI = 0, bestGap = Infinity;
+    for (let i = 0; i < groups.length - 1; i++) {
+      const gap = groupBox(groups[i + 1]).minX - groupBox(groups[i]).maxX;
+      if (gap < bestGap) { bestGap = gap; bestI = i; }
+    }
+    groups.splice(bestI, 2, groups[bestI].concat(groups[bestI + 1]));
+  }
+  // Split widest groups until the count fits.
+  while (groups.length < expectedCount) {
+    let widestI = -1, widestW = -1;
+    groups.forEach((g, i) => { const b = groupBox(g); if (b.maxX - b.minX > widestW) { widestW = b.maxX - b.minX; widestI = i; } });
+    const g = groups[widestI];
+    if (g.length >= 2) {
+      const ss = g.slice().sort((a, b) => strokeBox(a).cx - strokeBox(b).cx);
+      let cut = 1, bestGap = -Infinity;
+      for (let i = 0; i < ss.length - 1; i++) {
+        const gap = strokeBox(ss[i + 1]).cx - strokeBox(ss[i]).cx;
+        if (gap > bestGap) { bestGap = gap; cut = i + 1; }
+      }
+      groups.splice(widestI, 1, ss.slice(0, cut), ss.slice(cut));
+    } else {
+      // One connected stroke holding two digits: cut it near its x-middle.
+      const s = g[0], b = strokeBox(s), midX = (b.minX + b.maxX) / 2;
+      let cutIdx = -1, bestD = Infinity;
+      for (let i = Math.floor(s.length * 0.25); i < s.length * 0.85; i++) {
+        const d = Math.abs(s[i][0] - midX);
+        if (d < bestD) { bestD = d; cutIdx = i; }
+      }
+      if (cutIdx <= 0) break;
+      groups.splice(widestI, 1, [s.slice(0, cutIdx + 1)], [s.slice(cutIdx)]);
+    }
+  }
+  return groups;
+}
+
+function recognizeNumber(strokes, expectedCount) {
+  const groups = segmentStrokes(strokes, expectedCount);
+  let text = "";
+  const details = [];
+  for (const g of groups) {
+    const r = recognizeDigit(g);
+    if (r) { text += r.digit; details.push(r); }
+  }
+  return { text, details, groupCount: groups.length };
 }
 // ===== CORE-RECOGNIZER-END =====
 
@@ -334,6 +447,12 @@ const GOAL = 5;
 
 let level = 0, score = 0, streak = 0, cleared = 0, attempts = 0;
 let problem = null, entered = "";
+let problemStart = 0, timerInt = null, levelTimes = [];
+
+function parTime() {
+  const digits = String(problem.a).length;
+  return 3 + 1.3 * digits + 0.9 * level;
+}
 
 // Level chips
 const chipsEl = $("levelChips");
@@ -344,30 +463,45 @@ LEVELS.forEach((lv, i) => {
   b.onclick = () => setLevel(i);
   chipsEl.appendChild(b);
 });
-// Keypad fallback
+// Keypad fallback (manual entry)
 const padEl = $("keypad");
 "1234567890".split("").forEach(d => {
   const k = document.createElement("button");
   k.className = "key"; k.textContent = d;
-  k.onclick = () => pushDigit(d);
+  k.onclick = () => { clearInk(); entered = (entered + d).slice(0, 6); renderAnswer(); tick(); if (entered.length === String(problem.a).length) setTimeout(checkAnswer, 250); };
   padEl.appendChild(k);
 });
 $("btnPad").onclick = () => padEl.classList.toggle("open");
 
 function setLevel(i) {
-  level = i; cleared = 0; attempts = 0;
+  level = i; cleared = 0; levelTimes = [];
   [...chipsEl.children].forEach((c, j) => c.classList.toggle("active", j === i));
   $("hudLevel").textContent = LEVELS[i].master ? "★" : (i + 1);
   $("levelName").textContent = (LEVELS[i].master ? "Master Level" : "Level " + (i + 1)) + " · " + LEVELS[i].name;
   newProblem();
-  setFeedback("Level " + (LEVELS[i].master ? "Master" : (i + 1)) + " — " + LEVELS[i].name + ". Draw your answer!", "info");
+  setFeedback("Level " + (LEVELS[i].master ? "Master" : (i + 1)) + " — " + LEVELS[i].name + ". Write the whole answer at once!", "info");
+}
+
+function startTimer() {
+  problemStart = performance.now();
+  clearInterval(timerInt);
+  const show = () => { $("timer").textContent = "⏱ " + ((performance.now() - problemStart) / 1000).toFixed(1) + "s"; };
+  show();
+  timerInt = setInterval(show, 100);
+}
+function stopTimer() {
+  clearInterval(timerInt);
+  return (performance.now() - problemStart) / 1000;
 }
 
 function newProblem() {
   problem = pick(LEVELS[level].gens)();
   entered = ""; attempts = 0;
+  clearInk();
   $("problem").textContent = problem.q + " =";
+  $("parLabel").textContent = "par " + parTime().toFixed(0) + "s — beat it for bonus ⚡";
   renderAnswer(); renderProgress();
+  startTimer();
 }
 
 function renderAnswer() {
@@ -389,34 +523,32 @@ function setFeedback(msg, kind) {
   f.className = "feedback " + (kind || "");
 }
 
-function pushDigit(d) {
-  if (entered.length >= 6) return;
-  entered += d;
-  renderAnswer();
-  tick();
-  const want = String(problem.a).length;
-  if (entered.length === want) setTimeout(checkAnswer, 300);
-}
-
 function checkAnswer() {
   if (entered === "" || !problem) return;
+  inkConsumed = true;
   const val = parseInt(entered, 10);
   const box = $("answerBox");
   if (val === problem.a) {
+    const t = stopTimer();
     box.classList.add("correct");
     streak++; cleared++;
-    const pts = 10 * (level + 1) * (LEVELS[level].master ? 2 : 1);
+    levelTimes.push(t);
+    const base = 10 * (level + 1) * (LEVELS[level].master ? 2 : 1);
+    const par = parTime();
+    const bonus = Math.round(base * Math.max(0, Math.min(1, (par - t) / par)));
+    const pts = base + bonus;
     score += pts;
     $("hudScore").textContent = score;
     $("hudStreak").textContent = streak;
     goodSound();
     renderProgress();
+    const speedTxt = bonus > 0 ? " ⚡ " + t.toFixed(1) + "s — speed bonus +" + bonus + "!" : " (" + t.toFixed(1) + "s)";
     if (cleared >= GOAL) {
-      setFeedback("Correct! +" + pts + " 🎉", "good");
+      setFeedback("Correct! +" + pts + speedTxt + " 🎉", "good");
       setTimeout(showLevelClear, 650);
     } else {
-      setFeedback(pick(["Correct! +" + pts, "Nailed it! +" + pts, "Exactly right! +" + pts, "Too easy for you! +" + pts]), "good");
-      setTimeout(newProblem, 900);
+      setFeedback(pick(["Correct! +" + pts, "Nailed it! +" + pts, "Exactly right! +" + pts]) + speedTxt, "good");
+      setTimeout(newProblem, 850);
     }
   } else {
     box.classList.add("wrong");
@@ -424,11 +556,11 @@ function checkAnswer() {
     $("hudStreak").textContent = streak;
     badSound();
     if (attempts >= 3) {
+      stopTimer();
       setFeedback("The answer was " + problem.a + ". Next one — you got this.", "bad");
-      entered = "";
-      setTimeout(() => { renderAnswer(); newProblem(); }, 1400);
+      setTimeout(newProblem, 1500);
     } else {
-      setFeedback("Not quite — erase and draw it again.", "bad");
+      setFeedback("I read " + entered + " — not it. Clear it and write it again.", "bad");
       setTimeout(() => { box.classList.remove("wrong"); }, 400);
     }
   }
@@ -436,23 +568,24 @@ function checkAnswer() {
 
 function showLevelClear() {
   const last = level >= LEVELS.length - 1;
+  const avg = levelTimes.length ? (levelTimes.reduce((a, b) => a + b, 0) / levelTimes.length).toFixed(1) : "—";
   $("ovTitle").textContent = LEVELS[level].master ? "👑 MASTER LEVEL CLEARED!" : "Level " + (level + 1) + " cleared! 🎉";
-  $("ovText").textContent = last
-    ? "You finished the hardest level — square roots and all. Score: " + score
-    : "Five in a row done. Score: " + score + ". Ready for Level " + (level + 2) + " — " + LEVELS[level + 1].name + "?";
+  $("ovText").textContent = (last
+    ? "You finished the hardest level — square roots and all. "
+    : "Five correct. Ready for Level " + (level + 2) + " — " + LEVELS[level + 1].name + "? ")
+    + "Score: " + score + " · average time " + avg + "s per answer.";
   $("ovNext").style.display = last ? "none" : "block";
   $("overlay").classList.add("show");
 }
 $("ovNext").onclick = () => { $("overlay").classList.remove("show"); setLevel(level + 1); };
-$("ovStay").onclick = () => { $("overlay").classList.remove("show"); cleared = 0; renderProgress(); newProblem(); };
+$("ovStay").onclick = () => { $("overlay").classList.remove("show"); cleared = 0; levelTimes = []; renderProgress(); newProblem(); };
 
-$("btnBack").onclick = () => { entered = entered.slice(0, -1); renderAnswer(); };
-$("btnClear").onclick = () => { entered = ""; renderAnswer(); clearPad(); };
-$("btnCheck").onclick = checkAnswer;
+$("btnClear").onclick = () => { entered = ""; clearInk(); renderAnswer(); };
+$("btnCheck").onclick = () => { if (readInk(true)) checkAnswer(); else if (entered !== "") checkAnswer(); };
 
 // ---------------- Drawing pad ----------------
 const canvas = $("pad"), ctx = canvas.getContext("2d");
-let drawing = false, currentStroke = null, pendingStrokes = [], recogTimer = null;
+let drawing = false, currentStroke = null, inkStrokes = [], readTimer = null, inkConsumed = false;
 
 function fitCanvas() {
   const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
@@ -466,38 +599,54 @@ function padPos(e) {
   const r = canvas.getBoundingClientRect();
   // Equal units-per-pixel on BOTH axes (height is the reference). The pad is wider
   // than it is tall — scaling x and y separately squashes every drawn digit sideways
-  // before the recognizer sees it. That was the "can't read my 5" bug: a 1 (just a
-  // line) survived the squash, a 5 did not.
+  // before the recognizer sees it. That was the "can't read my 5" bug.
   const nx = ((e.clientX - r.left) / r.height) * 100;
   const ny = ((e.clientY - r.top) / r.height) * 100;
   return [nx, ny, e.clientX - r.left, e.clientY - r.top];
 }
 function clearPad() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-function scheduleRecognize() {
-  clearTimeout(recogTimer);
-  recogTimer = setTimeout(runRecognize, 420);
-}
-function runRecognize() {
-  if (pendingStrokes.length === 0) return;
-  const res = recognizeDigit(pendingStrokes);
-  pendingStrokes = [];
+function clearInk() {
+  inkStrokes = [];
+  clearTimeout(readTimer);
   clearPad();
-  if (res && res.distance < ACCEPT_DIST) {
-    pushDigit(res.digit);
-    setFeedback("Read that as " + res.digit + " ✓ — keep drawing for more digits.", "info");
-  } else {
-    setFeedback("Didn't catch that — draw the digit again, a little bigger.", "bad");
-    badSound();
+  $("drawHint").style.display = inkStrokes.length ? "none" : "flex";
+}
+
+// Read everything on the pad as ONE number. Always shows its best reading.
+// Returns true when it filled a complete (full-length) answer.
+function readInk(manual) {
+  if (inkStrokes.length === 0) return false;
+  const want = String(problem.a).length;
+  const res = recognizeNumber(inkStrokes, want);
+  if (res.text === "") return false;
+  entered = res.text;
+  renderAnswer();
+  if (res.text.length === want) {
+    if (!manual) setTimeout(checkAnswer, 200);
+    return true;
   }
+  if (manual) {
+    setFeedback("I read " + res.text + " — the answer has " + want + " digits. Add the rest or Clear and rewrite.", "info");
+  } else {
+    setFeedback("I read " + res.text + "… keep writing, or tap ✓ Check it.", "info");
+  }
+  return false;
+}
+function scheduleRead() {
+  clearTimeout(readTimer);
+  readTimer = setTimeout(() => readInk(false), 800);
 }
 
 canvas.addEventListener("pointerdown", e => {
   e.preventDefault();
   canvas.setPointerCapture(e.pointerId);
   drawing = true;
-  clearTimeout(recogTimer);
-  const [, , px, py] = padPos(e);
-  const [nx, ny] = padPos(e);
+  clearTimeout(readTimer);
+  // If the ink on the pad was already checked, a new stroke means a fresh try:
+  // wipe the pad so the old writing doesn't pollute the new reading.
+  if (inkConsumed) { clearInk(); inkConsumed = false; }
+  entered = ""; renderAnswer();
+  const [nx, ny, px, py] = padPos(e);
   currentStroke = [[nx, ny]];
   ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + 0.1, py + 0.1); ctx.stroke();
   $("drawHint").style.display = "none";
@@ -512,9 +661,9 @@ canvas.addEventListener("pointermove", e => {
 function endStroke() {
   if (!drawing) return;
   drawing = false;
-  if (currentStroke && currentStroke.length > 1) pendingStrokes.push(currentStroke);
+  if (currentStroke && currentStroke.length > 1) inkStrokes.push(currentStroke);
   currentStroke = null;
-  scheduleRecognize();
+  scheduleRead();
 }
 canvas.addEventListener("pointerup", endStroke);
 canvas.addEventListener("pointercancel", endStroke);
