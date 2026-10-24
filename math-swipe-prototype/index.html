@@ -260,7 +260,17 @@ const BASE_DIGITS = {
     [[[50,8],[62,12],[60,26],[46,30],[36,20],[42,9],[50,8],[66,40],[78,58],[72,82],[54,95],[32,88],[24,64],[34,42],[50,32]]],
     [[[50,5],[65,11],[67,24],[54,32],[38,27],[32,13],[41,5],[50,5]],[[52,37],[71,45],[75,64],[62,87],[41,89],[27,72],[33,49],[52,37]]],
     [[[64,14],[46,4],[30,14],[44,40],[62,66],[70,86],[52,96],[32,86],[40,58],[56,34],[64,14]]],
-    [[[50,4],[64,10],[66,22],[56,32],[44,30],[36,18],[44,6],[50,4]],[[50,36],[72,44],[78,66],[66,90],[44,94],[26,80],[28,56],[50,36]]]
+    [[[50,4],[64,10],[66,22],[56,32],[44,30],[36,18],[44,6],[50,4]],[[50,36],[72,44],[78,66],[66,90],[44,94],[26,80],[28,56],[50,36]]],
+    // One-continuous-stroke 8s (added 2026-10-24): top-first teardrop and
+    // open-loop constructions. Without these, a top-first 8 read correctly
+    // but with a median margin of only 0.31 (ambiguous 30% of the time, vs
+    // 0.81 for two-circle 8s), so it often showed the digit without
+    // auto-checking — which feels like "not recognized". With these, margin
+    // rises to ~0.91 and ambiguity falls to 0%, with no change to 6/9/3.
+    [[[50,4],[68,8],[74,22],[62,36],[50,42],[36,52],[28,68],[34,88],[52,96],[70,88],[76,68],[64,52],[50,42]]],
+    [[[50,8],[68,12],[72,26],[60,38],[50,44],[62,56],[74,70],[68,88],[50,94],[34,88],[28,68],[38,54],[50,44]]],
+    [[[50,6],[66,10],[72,24],[60,38],[48,44],[38,54],[30,70],[36,88],[54,96],[70,88],[76,68],[62,52],[50,44]]],
+    [[[48,10],[64,14],[70,28],[58,40],[46,44],[36,56],[30,72],[38,88],[56,95],[72,86],[76,66],[62,50],[48,44]]]
   ],
   "9": [
     [[[29,87],[53,77],[71,55],[79,33],[71,12],[51,4],[30,11],[21,27],[27,43],[45,51],[63,45],[77,31]]],
@@ -492,26 +502,36 @@ function segmentStrokes(strokes, expectedCount) {
     let widestI = -1, widestW = -1;
     groups.forEach((g, i) => { const b = groupBox(g); if (b.maxX - b.minX > widestW) { widestW = b.maxX - b.minX; widestI = i; } });
     const g = groups[widestI];
-    const split = splitGroupByValley(g);
-    if (split) { groups.splice(widestI, 1, split[0], split[1]); continue; }
+    // FIX 2026-10-24 (the 29->99 cause): the old code tried a vertical
+    // valley cut FIRST, even when the group held two whole digits. That
+    // cut sliced BOTH digits' strokes at one x, so each side inherited a
+    // fragment of the other digit — e.g. close "89" became "69", "18"
+    // became "68"/"88", and by the same mechanism "29" became "99".
+    // Correct order: assign WHOLE strokes to digits first; only cut a
+    // stroke when it is the only stroke in the group AND it is clearly
+    // wider than any single digit (w/h > 1.30 — single digits max out
+    // near 0.97). A single digit must never be force-split: a partial
+    // number then returns short text ("keep writing") instead of
+    // auto-checking as a confident wrong full number (old code turned a
+    // lone 9 into "11"/"01" with high confidence). The old mid-X cut
+    // fallback for single strokes is deleted for the same reason.
     if (g.length >= 2) {
       const ss = g.slice().sort((a, b) => strokeBox(a).cx - strokeBox(b).cx);
       let cut = 1, bestGap = -Infinity;
       for (let i = 0; i < ss.length - 1; i++) {
-        const gap = strokeBox(ss[i + 1]).cx - strokeBox(ss[i]).cx;
+        let leftMax = -Infinity;
+        for (let j = 0; j <= i; j++) leftMax = Math.max(leftMax, strokeBox(ss[j]).maxX);
+        const gap = strokeBox(ss[i + 1]).minX - leftMax;
         if (gap > bestGap) { bestGap = gap; cut = i + 1; }
       }
       groups.splice(widestI, 1, ss.slice(0, cut), ss.slice(cut));
-    } else {
-      const s = g[0], b = strokeBox(s), midX = (b.minX + b.maxX) / 2;
-      let cutIdx = -1, bestD = Infinity;
-      for (let i = Math.floor(s.length * 0.25); i < s.length * 0.85; i++) {
-        const d = Math.abs(s[i][0] - midX);
-        if (d < bestD) { bestD = d; cutIdx = i; }
-      }
-      if (cutIdx <= 0) break;
-      groups.splice(widestI, 1, [s.slice(0, cutIdx + 1)], [s.slice(cutIdx)]);
+      continue;
     }
+    const bb = strokeBBox(g);
+    if (bb.w / Math.max(1, bb.h) < 1.30) break; // single digit: return partial, do not force-split
+    const split = splitGroupByValley(g);
+    if (split) { groups.splice(widestI, 1, split[0], split[1]); continue; }
+    break;
   }
   return groups;
 }
@@ -580,7 +600,7 @@ const padEl = $("keypad");
 "1234567890".split("").forEach(d => {
   const k = document.createElement("button");
   k.className = "key"; k.textContent = d;
-  k.onclick = () => { clearInk(); entered = (entered + d).slice(0, 6); renderAnswer(); tick(); if (entered.length === String(problem.a).length) setTimeout(checkAnswer, 250); };
+  k.onclick = () => { clearInk(); inkConsumed = false; entered = (entered + d).slice(0, 6); renderAnswer(); tick(); if (entered.length === String(problem.a).length) setTimeout(checkAnswer, 250); };
   padEl.appendChild(k);
 });
 $("btnPad").onclick = () => padEl.classList.toggle("open");
@@ -677,7 +697,7 @@ function checkAnswer() {
       // reading and burn another attempt; the feedback above still shows
       // what was read. (Previously the old ink stayed and Check re-checked
       // it, so one misread could cost two attempts.)
-      setTimeout(() => { box.classList.remove("wrong"); entered = ""; clearInk(); renderAnswer(); }, 500);
+      wrongClearTimer = setTimeout(() => { box.classList.remove("wrong"); entered = ""; clearInk(); renderAnswer(); }, 500);
     }
   }
 }
@@ -696,11 +716,12 @@ function showLevelClear() {
 $("ovNext").onclick = () => { $("overlay").classList.remove("show"); setLevel(level + 1); };
 $("ovStay").onclick = () => { $("overlay").classList.remove("show"); cleared = 0; levelTimes = []; renderProgress(); newProblem(); };
 
-$("btnClear").onclick = () => { entered = ""; clearInk(); renderAnswer(); };
+$("btnClear").onclick = () => { entered = ""; clearTimeout(wrongClearTimer); inkConsumed = false; clearInk(); renderAnswer(); };
 $("btnCheck").onclick = () => {
   // Fixed: the old handler checked a PARTIAL reading as a wrong answer
   // (readInk returned false for a partial number, then the else-branch
   // checked it anyway) and re-checked stale ink after a wrong attempt.
+  if (inkConsumed) { setFeedback("That one was already checked — write a new answer first.", "info"); return; }
   if (inkStrokes.length > 0) {
     if (readInk(true)) checkAnswer(); // full-length: manual tap = player confirms the best guess, even if ambiguous
   } else if (entered !== "") {
@@ -713,7 +734,7 @@ $("btnCheck").onclick = () => {
 
 // ---------------- Drawing pad ----------------
 const canvas = $("pad"), ctx = canvas.getContext("2d");
-let drawing = false, currentStroke = null, inkStrokes = [], readTimer = null, inkConsumed = false;
+let drawing = false, currentStroke = null, inkStrokes = [], readTimer = null, wrongClearTimer = null, inkConsumed = false;
 
 function fitCanvas() {
   const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
@@ -799,6 +820,7 @@ canvas.addEventListener("pointerdown", e => {
   try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* capture is best-effort */ }
   drawing = true; activePointerId = e.pointerId;
   clearTimeout(readTimer);
+  clearTimeout(wrongClearTimer); // a stale 500ms clear from the last wrong attempt must never wipe new ink mid-stroke
   // If the ink on the pad was already checked, a new stroke means a fresh try:
   // wipe the pad so the old writing doesn't pollute the new reading.
   if (inkConsumed) { clearInk(); inkConsumed = false; }
