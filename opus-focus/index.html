@@ -20,8 +20,9 @@
   .lvl-btn, .pace-btn { background: #334155; color: #fff; }
   .go { background: #16a34a; color: #fff; font-size: 20px; padding: 16px 34px; width: 100%; margin-top: 12px; }
   .go:disabled { opacity: .5; }
-  #stage { height: 260px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 75%, #1e3a5f 0%, #0f172a 70%); border-radius: 14px; }
-  #performer { font-size: 120px; line-height: 1; will-change: transform; }
+  #stage { height: 260px; display: flex; align-items: center; justify-content: center; gap: 24px; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 75%, #1e3a5f 0%, #0f172a 70%); border-radius: 14px; }
+  .performer { font-size: 120px; line-height: 1; will-change: transform; }
+  .performer.multi { font-size: 84px; }
   #beat { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; background: #334155; }
   #beat.on { background: #facc15; box-shadow: 0 0 22px #facc15; }
   #status { min-height: 26px; font-size: 18px; font-weight: 700; margin: 12px 0 4px; color: #fde68a; }
@@ -44,7 +45,7 @@
 </header>
 
 <div class="card" id="setup">
-  <p style="margin:0 0 10px;font-weight:700">1. Pick who to watch</p>
+  <p style="margin:0 0 10px;font-weight:700">1. Pick who to watch (Levels 1–3 only)</p>
   <div class="row" id="chars">
     <button class="char-btn" data-char="ninja">🥷 Ninja<small>jumps backwards</small></button>
     <button class="char-btn" data-char="gymnast">🤸 Gymnast<small>jumps forward</small></button>
@@ -55,7 +56,10 @@
     <button class="lvl-btn active" data-level="1">Level 1 · 18–24</button>
     <button class="lvl-btn" data-level="2">Level 2 · 35–45</button>
     <button class="lvl-btn" data-level="3">Level 3 · 50–65</button>
+    <button class="lvl-btn" data-level="4">Level 4 · Duo · 30–40 flips</button>
+    <button class="lvl-btn" data-level="5">Level 5 · Trio · 45–60 flips</button>
   </div>
+  <p class="detail">Levels 4–5 use two or three characters at once — no need to pick one. Sometimes one flips, sometimes two, sometimes all. Count every flip.</p>
   <p style="margin:16px 0 10px;font-weight:700">3. Pace</p>
   <div class="row" id="paces">
     <button class="pace-btn active" data-pace="fast">Fast</button>
@@ -66,7 +70,7 @@
 </div>
 
 <div class="card hidden" id="play">
-  <div id="stage"><div id="performer">🥷</div><div id="beat"></div></div>
+  <div id="stage"><div id="beat"></div></div>
   <div id="status">Get ready…</div>
   <div id="hint">Count every <span id="verb">jump</span>. Don't look away!</div>
 </div>
@@ -83,67 +87,121 @@
   </div>
 </div>
 
-<p class="foot">Opus Focus prototype — ninja jumps backwards, gymnast jumps forward, ballerina turns. Level counts: 18–24 / 35–45 / 50–65, picked at random each round.</p>
+<p class="foot">Opus Focus prototype — ninja jumps backwards, gymnast jumps forward, ballerina turns. Levels 1–3: single character, 18–24 / 35–45 / 50–65. Level 4 Duo: two characters, 30–40 total flips. Level 5 Trio: all three, 45–60 total flips. In Duo/Trio, count every flip — one, two or all flipping at once each add to the total.</p>
 
 <script>
 const CHARS = {
-  ninja:    { emoji: '🥷', verb: 'jumps backwards', noun: 'jumps',  flip: -360 },
-  gymnast:  { emoji: '🤸', verb: 'jumps forward',   noun: 'jumps',  flip:  360 },
-  ballerina: { emoji: '🩰', verb: 'turns',           noun: 'turns',  flip:  360 },
+  ninja:    { emoji: '🥷', name: 'Ninja',    verb: 'jumps backwards', noun: 'jumps',  flip: -360 },
+  gymnast:  { emoji: '🤸', name: 'Gymnast',  verb: 'jumps forward',   noun: 'jumps',  flip:  360 },
+  ballerina: { emoji: '🩰', name: 'Ballerina', verb: 'turns',           noun: 'turns',  flip:  360 },
 };
-const RANGES = { 1: [18, 24], 2: [35, 45], 3: [50, 65] };
+const RANGES = { 1: [18, 24], 2: [35, 45], 3: [50, 65], 4: [30, 40], 5: [45, 60] };
 const PACES = { fast: { jump: 600, pause: 150 }, steady: { jump: 850, pause: 300 } };
 
 let chosenChar = null, level = 1, pace = 'fast', target = 0, done = 0;
 let score = 0, streak = 0, rounds = 0, playing = false;
+let roundChars = [], roundLabel = '';
 
 const $ = id => document.getElementById(id);
 function randInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function updateScore() { $('score').textContent = `Score: ${score}  •  Streak: ${streak}  •  Rounds: ${rounds}`; }
+function refreshGo() { $('goBtn').disabled = !(level >= 4 || chosenChar); }
 function pick(sel, fn) {
   document.querySelectorAll(sel).forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll(sel).forEach(x => x.classList.remove('active'));
     b.classList.add('active'); fn(b.dataset);
   }));
 }
-pick('#chars .char-btn', d => { chosenChar = d.char; $('goBtn').disabled = false; });
-pick('#levels .lvl-btn', d => { level = +d.level; });
+pick('#chars .char-btn', d => { chosenChar = d.char; refreshGo(); });
+pick('#levels .lvl-btn', d => { level = +d.level; refreshGo(); });
 pick('#paces .pace-btn', d => { pace = d.pace; });
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// Build the list of flip events for a Duo/Trio round: each event flips a
+// random subset (1..all) of the characters at once, and the subset sizes
+// add up to exactly the target total.
+function buildEvents(chars, total) {
+  const events = [];
+  let remaining = total;
+  while (remaining > 0) {
+    const k = randInt(1, Math.min(chars.length, remaining));
+    events.push(shuffle(chars).slice(0, k));
+    remaining -= k;
+  }
+  return events;
+}
+
 async function playRound() {
-  const c = CHARS[chosenChar];
+  const multi = level >= 4;
+  if (multi) {
+    roundChars = level === 4 ? shuffle(Object.keys(CHARS)).slice(0, 2) : Object.keys(CHARS);
+  } else {
+    roundChars = [chosenChar];
+  }
+  roundLabel = roundChars.map(k => CHARS[k].name).join(' + ');
   const [lo, hi] = RANGES[level];
   target = randInt(lo, hi); done = 0; playing = true;
   $('setup').classList.add('hidden');
   $('answerCard').classList.add('hidden');
   $('play').classList.remove('hidden');
-  $('performer').textContent = c.emoji;
-  $('verb').textContent = c.noun;
+  const stage = $('stage');
+  stage.querySelectorAll('.performer').forEach(el => el.remove());
+  const performers = {};
+  roundChars.forEach(k => {
+    const el = document.createElement('div');
+    el.className = 'performer' + (multi ? ' multi' : '');
+    el.textContent = CHARS[k].emoji;
+    stage.insertBefore(el, $('beat'));
+    performers[k] = el;
+  });
+  $('verb').textContent = multi ? 'flip' : CHARS[chosenChar].noun;
   $('status').textContent = 'Watch…';
   await sleep(800);
   const p = PACES[pace];
-  for (let i = 0; i < target; i++) {
-    $('status').textContent = '…';
-    $('beat').classList.add('on');
-    const anim = $('performer').animate([
-      { transform: 'translateY(0) rotate(0deg)' },
-      { transform: `translateY(-84px) rotate(${c.flip / 2}deg)`, offset: 0.5 },
-      { transform: `translateY(0) rotate(${c.flip}deg)` },
-    ], { duration: p.jump, easing: 'ease-in-out' });
-    await anim.finished;
-    $('performer').style.transform = 'none';
-    $('beat').classList.remove('on');
-    done++;
-    await sleep(p.pause);
+  if (!multi) {
+    const c = CHARS[chosenChar];
+    for (let i = 0; i < target; i++) {
+      $('status').textContent = '…';
+      $('beat').classList.add('on');
+      const anim = performers[chosenChar].animate([
+        { transform: 'translateY(0) rotate(0deg)' },
+        { transform: `translateY(-84px) rotate(${c.flip / 2}deg)`, offset: 0.5 },
+        { transform: `translateY(0) rotate(${c.flip}deg)` },
+      ], { duration: p.jump, easing: 'ease-in-out' });
+      await anim.finished;
+      performers[chosenChar].style.transform = 'none';
+      $('beat').classList.remove('on');
+      done++;
+      await sleep(p.pause);
+    }
+  } else {
+    const events = buildEvents(roundChars, target);
+    for (const subset of events) {
+      $('status').textContent = '…';
+      $('beat').classList.add('on');
+      const anims = subset.map(k => {
+        const c = CHARS[k];
+        return performers[k].animate([
+          { transform: 'translateY(0) rotate(0deg)' },
+          { transform: `translateY(-84px) rotate(${c.flip / 2}deg)`, offset: 0.5 },
+          { transform: `translateY(0) rotate(${c.flip}deg)` },
+        ], { duration: p.jump, easing: 'ease-in-out' });
+      });
+      await Promise.all(anims.map(a => a.finished));
+      subset.forEach(k => { performers[k].style.transform = 'none'; });
+      $('beat').classList.remove('on');
+      done += subset.length;
+      await sleep(p.pause);
+    }
   }
   playing = false;
   $('status').textContent = 'Done! How many was that?';
   $('play').classList.add('hidden');
   $('answerCard').classList.remove('hidden');
   $('result').classList.add('hidden');
-  $('verb2').textContent = c.noun;
+  $('verb2').textContent = multi ? 'flips' : CHARS[chosenChar].noun;
   $('guess').value = '';
   $('guess').focus();
 }
@@ -152,18 +210,22 @@ function check() {
   const g = parseInt($('guess').value, 10);
   if (!g || g < 1) { $('guess').focus(); return; }
   rounds++;
-  const c = CHARS[chosenChar];
+  const multi = level >= 4;
   $('result').classList.remove('hidden');
   if (g === target) {
     score += level * 10; streak++;
     $('resultLine').textContent = `✅ Exactly right — ${target}!`;
     $('resultLine').className = 'result good';
-    $('resultDetail').textContent = `The ${c.verb} ${target} times. Nice focus.`;
+    $('resultDetail').textContent = multi
+      ? `${roundLabel} flipped ${target} times between them. Nice focus.`
+      : `The ${CHARS[chosenChar].verb} ${target} times. Nice focus.`;
   } else {
     streak = 0;
     $('resultLine').textContent = `Not quite — it was ${target}.`;
     $('resultLine').className = 'result bad';
-    $('resultDetail').textContent = `You said ${g} — off by ${Math.abs(g - target)}. Watch the ${c.noun} one at a time next round.`;
+    $('resultDetail').textContent = multi
+      ? `You said ${g} — off by ${Math.abs(g - target)}. Count every flip next round, even when they move together.`
+      : `You said ${g} — off by ${Math.abs(g - target)}. Watch the ${CHARS[chosenChar].noun} one at a time next round.`;
   }
   updateScore();
 }
