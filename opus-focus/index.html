@@ -54,7 +54,7 @@
   <div class="row" id="chars">
     <button class="char-btn" data-char="ninja">🥷 Ninja<small>jumps backwards</small></button>
     <button class="char-btn" data-char="gymnast">🤸 Gymnast<small>jumps forward</small></button>
-    <button class="char-btn" data-char="ballerina">🩰 Ballerina<small>turns, every turn counts</small></button>
+    <button class="char-btn" data-char="ballerina">💃 Ballerina<small>turns, every turn counts</small></button>
   </div>
   <p style="margin:16px 0 10px;font-weight:700">2. Pick a level</p>
   <div class="row" id="levels">
@@ -67,11 +67,11 @@
   <p class="detail">Levels 4–5 use two or three characters at once — no need to pick one. Sometimes one flips, sometimes two, sometimes all. Count every flip.</p>
   <p style="margin:16px 0 10px;font-weight:700">3. Pace</p>
   <div class="row" id="paces">
-    <button class="pace-btn" data-pace="faster">Faster</button>
-    <button class="pace-btn active" data-pace="fast">Fast</button>
     <button class="pace-btn" data-pace="steady">Steady</button>
+    <button class="pace-btn active" data-pace="fast">Fast</button>
+    <button class="pace-btn" data-pace="faster">Faster</button>
   </div>
-  <p class="detail">Single-character levels (1–3) offer Faster and Fast. Duo/Trio (4–5) offer Fast and Steady, since there's more to track.</p>
+  <p class="detail">Paces run slow to fast, left to right. Single-character levels (1–3) offer Fast and Faster. Duo/Trio (4–5) offer Steady and Fast, since there's more to track.</p>
   <button class="go" id="goBtn" disabled>▶ Watch &amp; Count</button>
   <p class="detail">Counts are random every round, so you can never just guess last time's number.</p>
 </div>
@@ -100,7 +100,7 @@
 const CHARS = {
   ninja:    { emoji: '🥷', name: 'Ninja',    verb: 'jumps backwards', noun: 'jumps',  flip: -360 },
   gymnast:  { emoji: '🤸', name: 'Gymnast',  verb: 'jumps forward',   noun: 'jumps',  flip:  360 },
-  ballerina: { emoji: '🩰', name: 'Ballerina', verb: 'turns',           noun: 'turns',  flip:  360 },
+  ballerina: { emoji: '💃', name: 'Ballerina', verb: 'turns',           noun: 'turns',  flip:  360 },
 };
 const RANGES = { 1: [18, 24], 2: [35, 45], 3: [50, 65], 4: [30, 40], 5: [45, 60] };
 const PACES = { faster: { jump: 450, pause: 100 }, fast: { jump: 600, pause: 150 }, steady: { jump: 850, pause: 300 } };
