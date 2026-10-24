@@ -23,6 +23,11 @@
   #stage { height: 260px; display: flex; align-items: center; justify-content: center; gap: 24px; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 75%, #1e3a5f 0%, #0f172a 70%); border-radius: 14px; }
   .performer { font-size: 120px; line-height: 1; will-change: transform; }
   .performer.multi { font-size: 84px; }
+  /* Trio fix 2026-10-24: three wide emoji at 84px overflow a phone stage
+     (ninja clipped left, ballerina clipped right on Bryan's S22 shot), so
+     Trio performers shrink and tighten up to fit inside the stage. */
+  #stage.trio { gap: 10px; }
+  #stage.trio .performer { font-size: 56px; }
   #beat { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; background: #334155; }
   #beat.on { background: #facc15; box-shadow: 0 0 22px #facc15; }
   #status { min-height: 26px; font-size: 18px; font-weight: 700; margin: 12px 0 4px; color: #fde68a; }
@@ -62,9 +67,11 @@
   <p class="detail">Levels 4–5 use two or three characters at once — no need to pick one. Sometimes one flips, sometimes two, sometimes all. Count every flip.</p>
   <p style="margin:16px 0 10px;font-weight:700">3. Pace</p>
   <div class="row" id="paces">
+    <button class="pace-btn" data-pace="faster">Faster</button>
     <button class="pace-btn active" data-pace="fast">Fast</button>
     <button class="pace-btn" data-pace="steady">Steady</button>
   </div>
+  <p class="detail">Single-character levels (1–3) offer Faster and Fast. Duo/Trio (4–5) offer Fast and Steady, since there's more to track.</p>
   <button class="go" id="goBtn" disabled>▶ Watch &amp; Count</button>
   <p class="detail">Counts are random every round, so you can never just guess last time's number.</p>
 </div>
@@ -96,7 +103,20 @@ const CHARS = {
   ballerina: { emoji: '🩰', name: 'Ballerina', verb: 'turns',           noun: 'turns',  flip:  360 },
 };
 const RANGES = { 1: [18, 24], 2: [35, 45], 3: [50, 65], 4: [30, 40], 5: [45, 60] };
-const PACES = { fast: { jump: 600, pause: 150 }, steady: { jump: 850, pause: 300 } };
+const PACES = { faster: { jump: 450, pause: 100 }, fast: { jump: 600, pause: 150 }, steady: { jump: 850, pause: 300 } };
+// Pace options depend on the level: single-character levels (1-3) offer
+// Faster + Fast (Steady felt too slow there); Duo/Trio (4-5) offer Fast +
+// Steady, since tracking several characters at once is already harder.
+function syncPaces() {
+  const multi = level >= 4;
+  document.querySelectorAll('#paces .pace-btn').forEach(b => {
+    const show = b.dataset.pace === 'fast' || (multi ? b.dataset.pace === 'steady' : b.dataset.pace === 'faster');
+    b.classList.toggle('hidden', !show);
+  });
+  if (multi && pace === 'faster') pace = 'fast';
+  if (!multi && pace === 'steady') pace = 'fast';
+  document.querySelectorAll('#paces .pace-btn').forEach(b => b.classList.toggle('active', b.dataset.pace === pace));
+}
 
 let chosenChar = null, level = 1, pace = 'fast', target = 0, done = 0;
 let score = 0, streak = 0, rounds = 0, playing = false;
@@ -114,7 +134,7 @@ function pick(sel, fn) {
   }));
 }
 pick('#chars .char-btn', d => { chosenChar = d.char; refreshGo(); });
-pick('#levels .lvl-btn', d => { level = +d.level; refreshGo(); });
+pick('#levels .lvl-btn', d => { level = +d.level; refreshGo(); syncPaces(); });
 pick('#paces .pace-btn', d => { pace = d.pace; });
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -148,6 +168,7 @@ async function playRound() {
   $('play').classList.remove('hidden');
   const stage = $('stage');
   stage.querySelectorAll('.performer').forEach(el => el.remove());
+  stage.classList.toggle('trio', roundChars.length === 3);
   const performers = {};
   roundChars.forEach(k => {
     const el = document.createElement('div');
@@ -238,6 +259,7 @@ $('changeBtn').addEventListener('click', () => {
   $('answerCard').classList.add('hidden');
   $('setup').classList.remove('hidden');
 });
+syncPaces();
 updateScore();
 </script>
 </body>
