@@ -54,7 +54,7 @@
   <div class="row" id="chars">
     <button class="char-btn" data-char="ninja">🥷 Ninja<small>jumps backwards</small></button>
     <button class="char-btn" data-char="gymnast">🤸 Gymnast<small>jumps forward</small></button>
-    <button class="char-btn" data-char="ballerina">💃 Ballerina<small>turns, every turn counts</small></button>
+    <button class="char-btn" data-char="ballerina">💃 Dancer<small>turns, every turn counts</small></button>
   </div>
   <p style="margin:16px 0 10px;font-weight:700">2. Pick a level</p>
   <div class="row" id="levels">
@@ -94,13 +94,13 @@
   </div>
 </div>
 
-<p class="foot">Opus Focus prototype — ninja jumps backwards, gymnast jumps forward, ballerina turns. Levels 1–3: single character, 18–24 / 35–45 / 50–65. Level 4 Duo: two characters, 30–40 total flips. Level 5 Trio: all three, 45–60 total flips. In Duo/Trio, count every flip — one, two or all flipping at once each add to the total.</p>
+<p class="foot">Opus Focus prototype — ninja jumps backwards, gymnast jumps forward, dancer turns. Levels 1–3: single character, 18–24 / 35–45 / 50–65. Level 4 Duo: two characters, 30–40 total flips. Level 5 Trio: all three, 45–60 total flips. In Duo/Trio, count every flip — one, two or all flipping at once each add to the total.</p>
 
 <script>
 const CHARS = {
   ninja:    { emoji: '🥷', name: 'Ninja',    verb: 'jumps backwards', noun: 'jumps',  flip: -360 },
   gymnast:  { emoji: '🤸', name: 'Gymnast',  verb: 'jumps forward',   noun: 'jumps',  flip:  360 },
-  ballerina: { emoji: '💃', name: 'Ballerina', verb: 'turns',           noun: 'turns',  flip:  360 },
+  ballerina: { emoji: '💃', name: 'Dancer', verb: 'turns',           noun: 'turns',  flip:  360 },
 };
 const RANGES = { 1: [18, 24], 2: [35, 45], 3: [50, 65], 4: [30, 40], 5: [45, 60] };
 const PACES = { faster: { jump: 450, pause: 100 }, fast: { jump: 600, pause: 150 }, steady: { jump: 850, pause: 300 } };
