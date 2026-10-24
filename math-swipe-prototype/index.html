@@ -63,6 +63,7 @@
   .draw-wrap { position:relative; }
   canvas {
     width:100%; height:300px; display:block; border-radius:20px; touch-action:none;
+    overscroll-behavior:none; user-select:none; -webkit-user-select:none;
     background:linear-gradient(180deg, rgba(56,189,248,.07), rgba(56,189,248,.02));
     border:2px solid rgba(56,189,248,.45); cursor:crosshair;
   }
@@ -159,193 +160,222 @@
 </div>
 <script>
 // ===== CORE-RECOGNIZER-START =====
-// Digit styles: each digit maps to several STYLES people actually draw with a
-// finger (neat, sloppy, S-shaped 5, two-circle 8, stemmy 6...). Each style is a
-// list of strokes; each stroke is a list of [x, y] points in a 0..100 box (y down).
-// Every style is also matched at three widths (squished / normal / stretched),
-// because finger writing is never template-shaped. Matching ALWAYS returns its
-// best guess — no "can't read that" dead ends.
-const DIGIT_TEMPLATES = {
+// ===== NEW RECOGNIZER (replaces the old $P point-cloud engine) =====
+// Why this replaced $P — measured, not guessed:
+//  * $P flattens every stroke of a digit into ONE line, in drawn order, then
+//    resamples it. Change the stroke order of a valid 5 (belly before bar)
+//    and $P falls from 100% to 35% (misread as 8); a valid 7 cross-first
+//    falls from 100% to 28% (misread as 9). The game's own segmenter sorts
+//    strokes by horizontal centre before grouping, so even a correctly drawn
+//    multi-stroke digit could be fed to $P in the wrong order whenever the
+//    belly/crossbar centre happened to sit a hair left of the bar — the
+//    intermittent "sometimes it works" failures Bryan saw.
+//  * $P's greedy matcher weights the start of the stroke ~1 and the end
+//    ~0, so the feature that tells 5 from 6, or 9 from 8 (the bottom loop /
+//    tail), is discounted almost to zero.
+//  * This engine rasterizes the SHAPE and compares it to prototype images.
+//    Stroke order, stroke direction, loop start point and finger thickness
+//    cannot change the raster, so they cannot change the answer. Size is
+//    normalized by fitting the longest side into the grid, thickness is
+//    normalized by drawing every stroke at one fixed width. No network,
+//    no CDN, no model file: it runs offline on a static page, ~1ms/digit.
+//  * TensorFlow.js + a MNIST CNN was considered and rejected for this
+//    prototype: it needs a CDN load plus a model file, it fails offline,
+//    and MNIST digits are pen-on-paper scans — a different domain from
+//    finger-on-glass strokes — so its 99% MNIST score does not transfer
+//    without a real dataset of this game's players' handwriting, which does
+//    not exist yet. If that dataset is ever collected, a CNN is the right
+//    next step; until then a shape matcher that can be tested headlessly
+//    beats an untestable model download.
+// Confidence: margin = (second-best distance - best distance) / second-best
+// distance. A small margin means the shape is genuinely close to two digits.
+// The game NEVER uses the expected answer to override a reading: an
+// ambiguous full-length reading is shown, not auto-checked, and only the
+// player tapping Check submits the best guess. A confident wrong reading
+// is still marked wrong — that is the game working, not cheating.
+const AMBIG_MARGIN = 0.25;
+
+const BASE_DIGITS = {
   "0": [
-    [ [[50,3],[74,8],[90,24],[96,48],[92,72],[76,90],[52,97],[28,92],[11,74],[5,48],[9,25],[26,9],[50,3]] ],
-    [ [[58,4],[84,16],[94,44],[84,76],[56,96],[28,88],[10,58],[14,26],[34,8],[58,4]] ],
-    [ [[50,2],[70,10],[80,34],[78,66],[66,90],[46,98],[28,88],[18,60],[20,30],[32,10],[50,2]] ]
+    [[[50,3],[74,8],[90,24],[96,48],[92,72],[76,90],[52,97],[28,92],[11,74],[5,48],[9,25],[26,9],[50,3]]],
+    [[[58,4],[84,16],[94,44],[84,76],[56,96],[28,88],[10,58],[14,26],[34,8],[58,4]]],
+    [[[50,2],[70,10],[80,34],[78,66],[66,90],[46,98],[28,88],[18,60],[20,30],[32,10],[50,2]]],
+    [[[50,4],[66,10],[74,30],[74,70],[64,92],[48,96],[34,90],[26,70],[26,30],[36,10],[50,4]]],
+    [[[50,12],[74,14],[90,28],[92,52],[88,76],[70,90],[50,92],[28,90],[12,76],[8,50],[12,26],[30,14],[50,12]]]
   ],
   "1": [
-    [ [[36,24],[54,7],[56,50],[56,97]] ],
-    [ [[52,6],[54,97]] ],
-    [ [[52,6],[54,97]], [[24,96],[82,96]] ],
-    [ [[40,20],[60,4],[50,50],[43,97]] ]
+    [[[36,24],[54,7],[56,50],[56,97]]],
+    [[[52,6],[54,97]]],
+    [[[52,6],[54,97]],[[24,96],[82,96]]],
+    [[[40,20],[60,4],[50,50],[43,97]]],
+    [[[38,28],[54,8],[52,94]]]
   ],
   "2": [
-    [ [[15,26],[24,11],[45,4],[67,7],[81,19],[79,35],[64,53],[33,80],[16,93],[87,93]] ],
-    [ [[20,14],[44,6],[70,8],[80,20],[66,44],[24,84],[16,94],[86,94]] ],
-    [ [[16,28],[26,10],[50,4],[72,12],[74,30],[52,52],[26,76],[18,90],[44,95],[76,92],[90,86]] ]
+    [[[15,26],[24,11],[45,4],[67,7],[81,19],[79,35],[64,53],[33,80],[16,93],[87,93]]],
+    [[[20,14],[44,6],[70,8],[80,20],[66,44],[24,84],[16,94],[86,94]]],
+    [[[16,28],[26,10],[50,4],[72,12],[74,30],[52,52],[26,76],[18,90],[44,95],[76,92],[90,86]]],
+    [[[28,26],[36,10],[56,6],[72,14],[68,30],[52,40],[36,52],[24,72],[22,90],[80,90]]]
   ],
   "3": [
-    [ [[19,15],[41,5],[65,7],[78,19],[70,36],[49,45],[69,51],[81,66],[72,86],[46,96],[23,88],[15,74]] ],
-    [ [[16,10],[84,10],[58,44],[76,54],[82,72],[66,92],[36,95],[16,84]] ],
-    [ [[22,12],[48,5],[72,10],[74,26],[52,44],[76,56],[78,76],[58,93],[30,92],[18,78]] ],
-    [ [[15,17],[43,4],[69,11],[71,31],[47,43],[71,53],[79,73],[61,94],[29,96],[13,81]] ]
+    [[[19,15],[41,5],[65,7],[78,19],[70,36],[49,45],[69,51],[81,66],[72,86],[46,96],[23,88],[15,74]]],
+    [[[16,10],[84,10],[58,44],[76,54],[82,72],[66,92],[36,95],[16,84]]],
+    [[[22,12],[48,5],[72,10],[74,26],[52,44],[76,56],[78,76],[58,93],[30,92],[18,78]]],
+    [[[15,17],[43,4],[69,11],[71,31],[47,43],[71,53],[79,73],[61,94],[29,96],[13,81]]]
   ],
   "4": [
-    [ [[60,96],[60,8],[15,60],[90,60]] ],
-    [ [[18,12],[12,58],[88,58]], [[58,8],[58,96]] ],
-    [ [[66,98],[68,16],[64,6],[22,62],[94,62]] ],
-    [ [[70,98],[72,10],[26,64],[94,64]] ]
+    [[[60,96],[60,8],[15,60],[90,60]]],
+    [[[18,12],[12,58],[88,58]],[[58,8],[58,96]]],
+    [[[66,98],[68,16],[64,6],[22,62],[94,62]]],
+    [[[70,98],[72,10],[26,64],[94,64]]],
+    [[[70,96],[70,8],[22,60],[92,60]]]
   ],
   "5": [
-    [ [[79,7],[31,7],[27,38],[47,30],[69,37],[81,53],[75,77],[53,91],[28,87],[17,72]] ],
-    [ [[80,6],[28,6],[26,38]], [[47,30],[70,38],[81,56],[73,81],[50,93],[26,87],[17,72]] ],
-    [ [[82,6],[26,6],[24,44],[56,36],[80,50],[76,76],[52,92],[26,88],[16,70]] ],
-    [ [[80,14],[58,6],[34,12],[26,28],[36,44],[58,52],[74,62],[76,78],[60,92],[36,94],[20,84]] ],
-    [ [[70,8],[30,8],[28,40],[50,34],[72,44],[78,62],[66,86],[42,94],[22,86],[16,74]] ]
+    [[[79,7],[31,7],[27,38],[47,30],[69,37],[81,53],[75,77],[53,91],[28,87],[17,72]]],
+    [[[80,6],[28,6],[26,38]],[[47,30],[70,38],[81,56],[73,81],[50,93],[26,87],[17,72]]],
+    [[[82,6],[26,6],[24,44],[56,36],[80,50],[76,76],[52,92],[26,88],[16,70]]],
+    [[[80,14],[58,6],[34,12],[26,28],[36,44],[58,52],[74,62],[76,78],[60,92],[36,94],[20,84]]],
+    [[[70,8],[30,8],[28,40],[50,34],[72,44],[78,62],[66,86],[42,94],[22,86],[16,74]]],
+    [[[78,8],[58,4],[36,8],[28,24],[34,40],[52,46],[70,50],[80,64],[74,84],[56,94],[34,92],[20,80]]]
   ],
   "6": [
-    [ [[72,11],[47,21],[29,45],[22,69],[29,87],[49,96],[69,89],[80,72],[73,54],[53,46],[35,55],[27,71]] ],
-    [ [[60,4],[46,24],[34,48],[28,70],[34,88],[52,96],[70,89],[79,73],[70,55],[50,50],[34,62],[29,76]] ],
-    [ [[58,8],[40,28],[30,54],[28,74],[40,90],[58,95],[74,86],[80,68],[72,52],[54,47],[38,56],[31,72]] ],
-    [ [[70,16],[44,30],[28,58],[30,80],[46,92],[66,88],[76,70],[64,54],[44,56],[32,70]] ],
-    [ [[74,6],[52,28],[36,56],[30,74],[40,89],[60,93],[73,80],[66,61],[47,57],[33,70]] ],
-    [ [[48,90],[29,82],[24,62],[35,48],[57,47],[71,60],[66,80],[50,90],[56,62],[68,34],[82,12]] ]
+    [[[72,11],[47,21],[29,45],[22,69],[29,87],[49,96],[69,89],[80,72],[73,54],[53,46],[35,55],[27,71]]],
+    [[[60,4],[46,24],[34,48],[28,70],[34,88],[52,96],[70,89],[79,73],[70,55],[50,50],[34,62],[29,76]]],
+    [[[58,8],[40,28],[30,54],[28,74],[40,90],[58,95],[74,86],[80,68],[72,52],[54,47],[38,56],[31,72]]],
+    [[[70,16],[44,30],[28,58],[30,80],[46,92],[66,88],[76,70],[64,54],[44,56],[32,70]]],
+    [[[74,6],[52,28],[36,56],[30,74],[40,89],[60,93],[73,80],[66,61],[47,57],[33,70]]],
+    [[[48,90],[29,82],[24,62],[35,48],[57,47],[71,60],[66,80],[50,90],[56,62],[68,34],[82,12]]],
+    [[[70,22],[50,34],[36,54],[32,74],[42,90],[60,92],[74,80],[72,62],[58,52],[42,58],[34,72]]]
   ],
   "7": [
-    [ [[13,9],[87,9],[50,97]] ],
-    [ [[13,9],[87,9],[50,97]], [[33,50],[73,50]] ],
-    [ [[22,22],[30,8],[88,8],[52,97]] ],
-    [ [[8,8],[92,8],[44,97]] ]
+    [[[13,9],[87,9],[50,97]]],
+    [[[13,9],[87,9],[50,97]],[[33,50],[73,50]]],
+    [[[22,22],[30,8],[88,8],[52,97]]],
+    [[[8,8],[92,8],[44,97]]],
+    [[[14,10],[86,10],[60,56],[44,94]]]
   ],
   "8": [
-    [ [[50,45],[35,34],[30,18],[40,6],[59,4],[71,13],[69,29],[55,43],[48,52],[35,63],[31,79],[42,94],[61,95],[74,84],[72,64],[57,50],[50,45]] ],
-    [ [[50,6],[64,10],[68,22],[58,32],[44,30],[36,18],[44,7],[50,6],[62,38],[76,48],[78,66],[66,86],[48,94],[30,86],[22,66],[30,46],[50,38]] ],
-    [ [[50,5],[72,26],[50,48],[74,70],[52,95],[28,72],[48,48],[26,24],[50,5]] ],
-    [ [[50,8],[62,12],[60,26],[46,30],[36,20],[42,9],[50,8],[66,40],[78,58],[72,82],[54,95],[32,88],[24,64],[34,42],[50,32]] ],
-    [ [[50,5],[65,11],[67,24],[54,32],[38,27],[32,13],[41,5],[50,5]], [[52,37],[71,45],[75,64],[62,87],[41,89],[27,72],[33,49],[52,37]] ],
-    [ [[64,14],[46,4],[30,14],[44,40],[62,66],[70,86],[52,96],[32,86],[40,58],[56,34],[64,14]] ]
+    [[[50,45],[35,34],[30,18],[40,6],[59,4],[71,13],[69,29],[55,43],[48,52],[35,63],[31,79],[42,94],[61,95],[74,84],[72,64],[57,50],[50,45]]],
+    [[[50,6],[64,10],[68,22],[58,32],[44,30],[36,18],[44,7],[50,6],[62,38],[76,48],[78,66],[66,86],[48,94],[30,86],[22,66],[30,46],[50,38]]],
+    [[[50,5],[72,26],[50,48],[74,70],[52,95],[28,72],[48,48],[26,24],[50,5]]],
+    [[[50,8],[62,12],[60,26],[46,30],[36,20],[42,9],[50,8],[66,40],[78,58],[72,82],[54,95],[32,88],[24,64],[34,42],[50,32]]],
+    [[[50,5],[65,11],[67,24],[54,32],[38,27],[32,13],[41,5],[50,5]],[[52,37],[71,45],[75,64],[62,87],[41,89],[27,72],[33,49],[52,37]]],
+    [[[64,14],[46,4],[30,14],[44,40],[62,66],[70,86],[52,96],[32,86],[40,58],[56,34],[64,14]]],
+    [[[50,4],[64,10],[66,22],[56,32],[44,30],[36,18],[44,6],[50,4]],[[50,36],[72,44],[78,66],[66,90],[44,94],[26,80],[28,56],[50,36]]]
   ],
   "9": [
-    [ [[29,87],[53,77],[71,55],[79,33],[71,12],[51,4],[30,11],[21,27],[27,43],[45,51],[63,45],[77,31]] ],
-    [ [[78,30],[60,8],[38,8],[24,24],[26,44],[44,54],[66,48],[78,30],[70,70],[52,92]] ],
-    [ [[50,5],[68,10],[78,26],[72,42],[56,50],[38,44],[26,28],[32,12],[50,5],[74,34],[66,66],[54,95]] ]
+    [[[29,87],[53,77],[71,55],[79,33],[71,12],[51,4],[30,11],[21,27],[27,43],[45,51],[63,45],[77,31]]],
+    [[[78,30],[60,8],[38,8],[24,24],[26,44],[44,54],[66,48],[78,30],[70,70],[52,92]]],
+    [[[50,5],[68,10],[78,26],[72,42],[56,50],[38,44],[26,28],[32,12],[50,5],[74,34],[66,66],[54,95]]],
+    [[[76,24],[60,6],[38,8],[26,26],[34,46],[56,50],[74,40],[72,62],[58,88],[42,96]]],
+    [[[50,6],[70,12],[78,30],[66,48],[44,50],[28,38],[28,20],[44,8],[50,6],[66,40],[62,70],[52,94]]]
   ]
 };
+// Backwards-compatible name for older test scripts.
+const DIGIT_TEMPLATES = BASE_DIGITS;
 
-const NUM_POINTS = 32;
+const RASTER_GRID = 24, RASTER_FIT = 18, RASTER_HALF_W = 1.25, RASTER_FALLOFF = 1.3;
 
-function resamplePoints(points, n) {
-  const pts = points.map(p => [p[0], p[1]]);
-  let total = 0;
-  for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]);
-  if (total === 0) return pts.slice(0, 1);
-  const step = total / (n - 1);
-  const out = [pts[0]];
-  let prev = pts[0], acc = 0;
-  for (let i = 1; i < pts.length; i++) {
-    let cur = pts[i];
-    let d = Math.hypot(cur[0]-prev[0], cur[1]-prev[1]);
-    while (acc + d >= step && d > 0) {
-      const t = (step - acc) / d;
-      const np = [prev[0] + t*(cur[0]-prev[0]), prev[1] + t*(cur[1]-prev[1])];
-      out.push(np);
-      prev = np;
-      d = Math.hypot(cur[0]-prev[0], cur[1]-prev[1]);
-      acc = 0;
-    }
-    acc += d;
-    prev = cur;
-  }
-  while (out.length < n) out.push(pts[pts.length-1]);
-  return out.slice(0, n);
+function smoothStrokes(strokes) {
+  return strokes.map(s => {
+    if (s.length < 3) return s.slice();
+    const out = [s[0]];
+    for (let i = 1; i < s.length - 1; i++)
+      out.push([(s[i-1][0] + 2*s[i][0] + s[i+1][0]) / 4, (s[i-1][1] + 2*s[i][1] + s[i+1][1]) / 4]);
+    out.push(s[s.length - 1]);
+    return out;
+  });
 }
 
-function strokesToCloud(strokes) {
-  // $P-style point cloud: densify each stroke's polyline, resample, scale, center.
-  let flat = [];
-  for (const s of strokes) {
-    for (let i = 0; i < s.length; i++) {
-      flat.push(s[i]);
-      if (i + 1 < s.length) {
-        const a = s[i], b = s[i + 1];
-        const d = Math.hypot(b[0] - a[0], b[1] - a[1]);
-        const steps = Math.floor(d / 2);
-        for (let k = 1; k < steps; k++) flat.push([a[0] + (b[0] - a[0]) * (k / steps), a[1] + (b[1] - a[1]) * (k / steps)]);
+function strokeBBox(strokes) {
+  let mnx = Infinity, mxx = -Infinity, mny = Infinity, mxy = -Infinity;
+  for (const s of strokes) for (const p of s) {
+    mnx = Math.min(mnx, p[0]); mxx = Math.max(mxx, p[0]);
+    mny = Math.min(mny, p[1]); mxy = Math.max(mxy, p[1]);
+  }
+  return { mnx, mxx, mny, mxy, w: mxx - mnx, h: mxy - mny };
+}
+
+// Rasterize strokes to a RASTER_GRID x RASTER_GRID float image.
+// Aspect is preserved (longest side fits RASTER_FIT); thickness is fixed,
+// so finger size and stroke width cannot change the result.
+function rasterize(strokes) {
+  const sm = smoothStrokes(strokes);
+  const bb = strokeBBox(sm);
+  if (!isFinite(bb.w) || !isFinite(bb.h) || Math.max(bb.w, bb.h) < 6) return null;
+  const scale = RASTER_FIT / Math.max(bb.w, bb.h);
+  const ox = (RASTER_GRID - bb.w * scale) / 2 - bb.mnx * scale;
+  const oy = (RASTER_GRID - bb.h * scale) / 2 - bb.mny * scale;
+  const segs = [];
+  for (const s of sm) {
+    if (s.length === 1) segs.push([s[0][0]*scale + ox, s[0][1]*scale + oy, s[0][0]*scale + ox + 0.01, s[0][1]*scale + oy]);
+    for (let i = 0; i + 1 < s.length; i++)
+      segs.push([s[i][0]*scale + ox, s[i][1]*scale + oy, s[i+1][0]*scale + ox, s[i+1][1]*scale + oy]);
+  }
+  const img = new Float32Array(RASTER_GRID * RASTER_GRID);
+  for (let gy = 0; gy < RASTER_GRID; gy++) {
+    for (let gx = 0; gx < RASTER_GRID; gx++) {
+      const cx = gx + 0.5, cy = gy + 0.5;
+      let best = Infinity;
+      for (let k = 0; k < segs.length; k++) {
+        const x1 = segs[k][0], y1 = segs[k][1], x2 = segs[k][2], y2 = segs[k][3];
+        const dx = x2 - x1, dy = y2 - y1, len2 = dx*dx + dy*dy;
+        let t = len2 === 0 ? 0 : ((cx - x1)*dx + (cy - y1)*dy) / len2;
+        t = t < 0 ? 0 : (t > 1 ? 1 : t);
+        const d = Math.hypot(cx - (x1 + t*dx), cy - (y1 + t*dy));
+        if (d < best) best = d;
       }
+      img[gy * RASTER_GRID + gx] = best <= RASTER_HALF_W ? 1 : Math.max(0, 1 - (best - RASTER_HALF_W) / RASTER_FALLOFF);
     }
   }
-  if (flat.length < 2) return null;
-  let pts = resamplePoints(flat, NUM_POINTS);
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const p of pts) { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]); }
-  const size = Math.max(maxX - minX, maxY - minY) || 1;
-  pts = pts.map(p => [(p[0]-minX)/size, (p[1]-minY)/size]);
-  let cx = 0, cy = 0;
-  for (const p of pts) { cx += p[0]; cy += p[1]; }
-  cx /= pts.length; cy /= pts.length;
-  return pts.map(p => [p[0]-cx, p[1]-cy]);
+  return img;
 }
 
-function cloudDistance(cloudA, cloudB, start) {
-  const n = cloudA.length;
-  const matched = new Array(n).fill(false);
-  let sum = 0;
-  let i = start;
-  do {
-    let best = Infinity, bestIdx = -1;
-    for (let j = 0; j < n; j++) {
-      if (matched[j]) continue;
-      const d = Math.hypot(cloudA[i][0]-cloudB[j][0], cloudA[i][1]-cloudB[j][1]);
-      if (d < best) { best = d; bestIdx = j; }
-    }
-    matched[bestIdx] = true;
-    const weight = 1 - ((i - start + n) % n) / n;
-    sum += weight * best;
-    i = (i + 1) % n;
-  } while (i !== start);
-  return sum;
+function transformStrokes(strokes, rotDeg, xScale) {
+  const r = rotDeg * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
+  return strokes.map(st => st.map(p => {
+    const px = (p[0] - 50) * xScale, py = p[1] - 50;
+    return [px * c - py * s + 50, px * s + py * c + 50];
+  }));
 }
 
-function cloudMatch(cloudA, cloudB) {
-  const n = cloudA.length;
-  const step = Math.max(1, Math.floor(Math.sqrt(n)));
-  let best = Infinity;
-  for (let s = 0; s < n; s += step) best = Math.min(best, cloudDistance(cloudA, cloudB, s));
-  return best;
-}
-
-function scaleStrokesX(strokes, f) {
-  return strokes.map(s => s.map(([x, y]) => [50 + (x - 50) * f, y]));
-}
-
-// Template library: every style at three widths.
-const TEMPLATE_CLOUDS = {};
-for (const d of Object.keys(DIGIT_TEMPLATES)) {
-  TEMPLATE_CLOUDS[d] = [];
-  for (const style of DIGIT_TEMPLATES[d]) {
-    for (const f of [0.72, 1.0, 1.38]) {
-      const c = strokesToCloud(scaleStrokesX(style, f));
-      if (c) TEMPLATE_CLOUDS[d].push(c);
+// Prototype library: every base style at 3 rotations x 3 widths.
+// Built once at load; recognition is then a plain image comparison.
+const PROTOTYPES = [];
+for (const d of Object.keys(BASE_DIGITS)) {
+  for (const style of BASE_DIGITS[d]) {
+    for (const rot of [-12, 0, 12]) {
+      for (const xs of [0.85, 1.0, 1.18]) {
+        const img = rasterize(transformStrokes(style, rot, xs));
+        if (img) PROTOTYPES.push({ digit: d, img });
+      }
     }
   }
 }
 
 function recognizeDigit(strokes) {
-  const cloud = strokesToCloud(strokes);
-  if (!cloud) return null;
-  let bestDigit = null, bestDist = Infinity, secondDist = Infinity;
-  for (const d of Object.keys(TEMPLATE_CLOUDS)) {
-    for (const tc of TEMPLATE_CLOUDS[d]) {
-      const dist = cloudMatch(cloud, tc);
-      if (dist < bestDist) { secondDist = bestDist; bestDist = dist; bestDigit = d; }
-      else if (dist < secondDist) { secondDist = dist; }
+  const img = rasterize(strokes);
+  if (!img) return null;
+  const perDigit = {};
+  for (let pi = 0; pi < PROTOTYPES.length; pi++) {
+    const p = PROTOTYPES[pi];
+    let ssd = 0;
+    for (let i = 0; i < img.length; i++) {
+      const diff = img[i] - p.img[i];
+      ssd += diff * diff;
     }
+    if (perDigit[p.digit] === undefined || ssd < perDigit[p.digit]) perDigit[p.digit] = ssd;
   }
-  return { digit: bestDigit, distance: bestDist, margin: secondDist - bestDist };
+  const ranked = Object.keys(perDigit).map(d => ({ digit: d, dist: perDigit[d] })).sort((a, b) => a.dist - b.dist);
+  const best = ranked[0], second = ranked[1];
+  const margin = second ? (second.dist - best.dist) / second.dist : 1;
+  return {
+    digit: best.digit, distance: best.dist,
+    secondDigit: second ? second.digit : null, secondDistance: second ? second.dist : null,
+    margin: margin, ambiguous: margin < AMBIG_MARGIN, candidates: ranked
+  };
 }
 
-// Split a pile of strokes (a whole handwritten number) into per-digit groups,
-// left to right. Strokes that overlap horizontally belong to the same digit
-// (crossbars, two-stroke 4s and 5s). expectedCount — which the game always
-// knows — is used to merge or split groups until the count fits.
+// ---- Segmentation: whole handwritten number -> per-digit stroke groups ----
 function strokeBox(s) {
   let minX = Infinity, maxX = -Infinity, sumX = 0;
   for (const p of s) { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); sumX += p[0]; }
@@ -355,6 +385,88 @@ function groupBox(g) {
   let minX = Infinity, maxX = -Infinity;
   for (const s of g) { const b = strokeBox(s); minX = Math.min(minX, b.minX); maxX = Math.max(maxX, b.maxX); }
   return { minX, maxX };
+}
+function densifyPoints(strokes, step) {
+  const out = [];
+  for (const s of strokes) {
+    for (let i = 0; i < s.length; i++) {
+      out.push(s[i]);
+      if (i + 1 < s.length) {
+        const a = s[i], b = s[i+1], d = Math.hypot(b[0]-a[0], b[1]-a[1]);
+        const n = Math.floor(d / step);
+        for (let k = 1; k < n; k++) out.push([a[0] + (b[0]-a[0])*(k/n), a[1] + (b[1]-a[1])*(k/n)]);
+      }
+    }
+  }
+  return out;
+}
+function splitStrokeAtX(stroke, splitX) {
+  const left = [], right = [];
+  for (let i = 0; i < stroke.length; i++) {
+    const p = stroke[i];
+    if (p[0] <= splitX) left.push(p); else right.push(p);
+    if (i + 1 < stroke.length) {
+      const q = stroke[i+1];
+      if ((p[0] <= splitX && q[0] > splitX) || (p[0] > splitX && q[0] <= splitX)) {
+        const t = (splitX - p[0]) / (q[0] - p[0] || 1e-9);
+        const cross = [splitX, p[1] + t * (q[1] - p[1])];
+        left.push(cross); right.push(cross);
+      }
+    }
+  }
+  return [left, right];
+}
+// Split one group into two at a vertical valley in its ink projection.
+// Returns [leftGroup, rightGroup] or null when no valley exists.
+function splitGroupByValley(g) {
+  const pts = densifyPoints(g, 2);
+  const bb = strokeBBox(g);
+  const width = bb.w;
+  if (width < 24) return null;
+  const BIN = 2, nb = Math.max(1, Math.floor(width / BIN));
+  const counts = new Array(nb).fill(0);
+  for (const p of pts) {
+    const bi = Math.min(nb - 1, Math.max(0, Math.floor((p[0] - bb.mnx) / BIN)));
+    counts[bi]++;
+  }
+  const smooth = counts.map((c, i) => ((counts[i-1] || 0) + 2*c + (counts[i+1] || 0)) / 4);
+  const maxC = Math.max.apply(null, smooth);
+  // Search only the middle 30–70% of the group: a two-digit group splits
+  // near its middle, while a valley inside one digit (e.g. the waist of
+  // an 8) sits outside that band or is much weaker.
+  const lo = Math.floor(nb * 0.30), hi = Math.ceil(nb * 0.70);
+  let bestBin = -1, bestVal = Infinity;
+  for (let i = lo; i <= hi; i++) {
+    const leftW = (i + 1) * BIN, rightW = width - leftW;
+    if (leftW < 12 || rightW < 12) continue;
+    if (smooth[i] < bestVal) { bestVal = smooth[i]; bestBin = i; }
+  }
+  if (bestBin < 0 || bestVal > 0.5 * maxC) return null;
+  const splitX = bb.mnx + (bestBin + 1) * BIN;
+  const left = [], right = [];
+  for (const s of g) {
+    const b = strokeBox(s);
+    if (b.maxX <= splitX) left.push(s);
+    else if (b.minX > splitX) right.push(s);
+    else {
+      const parts = splitStrokeAtX(s, splitX);
+      if (parts[0].length >= 2) left.push(parts[0]);
+      if (parts[1].length >= 2) right.push(parts[1]);
+    }
+  }
+  if (left.length === 0 || right.length === 0) return null;
+  // Connected case (one stroke holding two digits): the stroke crossing
+  // the valley is the travel between digits, belonging to neither digit.
+  // Trim a band around the valley out of that one stroke, so neither digit
+  // inherits the connector as a diagonal tail/head.
+  if (g.length === 1) {
+    const TRIM = 12;
+    const l = left[0].filter(p => p[0] <= splitX - TRIM);
+    const r = right[0].filter(p => p[0] >= splitX + TRIM);
+    if (l.length < 2 || r.length < 2) return null;
+    return [[l], [r]];
+  }
+  return [left, right];
 }
 
 function segmentStrokes(strokes, expectedCount) {
@@ -368,7 +480,6 @@ function segmentStrokes(strokes, expectedCount) {
     if (nb.minX <= cb.maxX + GAP) cur.push(sorted[i]);
     else groups.push([sorted[i]]);
   }
-  // Merge closest neighbours until the count fits.
   while (groups.length > expectedCount) {
     let bestI = 0, bestGap = Infinity;
     for (let i = 0; i < groups.length - 1; i++) {
@@ -377,11 +488,12 @@ function segmentStrokes(strokes, expectedCount) {
     }
     groups.splice(bestI, 2, groups[bestI].concat(groups[bestI + 1]));
   }
-  // Split widest groups until the count fits.
   while (groups.length < expectedCount) {
     let widestI = -1, widestW = -1;
     groups.forEach((g, i) => { const b = groupBox(g); if (b.maxX - b.minX > widestW) { widestW = b.maxX - b.minX; widestI = i; } });
     const g = groups[widestI];
+    const split = splitGroupByValley(g);
+    if (split) { groups.splice(widestI, 1, split[0], split[1]); continue; }
     if (g.length >= 2) {
       const ss = g.slice().sort((a, b) => strokeBox(a).cx - strokeBox(b).cx);
       let cut = 1, bestGap = -Infinity;
@@ -391,7 +503,6 @@ function segmentStrokes(strokes, expectedCount) {
       }
       groups.splice(widestI, 1, ss.slice(0, cut), ss.slice(cut));
     } else {
-      // One connected stroke holding two digits: cut it near its x-middle.
       const s = g[0], b = strokeBox(s), midX = (b.minX + b.maxX) / 2;
       let cutIdx = -1, bestD = Infinity;
       for (let i = Math.floor(s.length * 0.25); i < s.length * 0.85; i++) {
@@ -413,8 +524,9 @@ function recognizeNumber(strokes, expectedCount) {
     const r = recognizeDigit(g);
     if (r) { text += r.digit; details.push(r); }
   }
-  return { text, details, groupCount: groups.length };
+  return { text, details, groupCount: groups.length, ambiguous: details.some(d => d.ambiguous) };
 }
+
 // ===== CORE-RECOGNIZER-END =====
 
 // ---------------- Game ----------------
@@ -560,8 +672,12 @@ function checkAnswer() {
       setFeedback("The answer was " + problem.a + ". Next one — you got this.", "bad");
       setTimeout(newProblem, 1500);
     } else {
-      setFeedback("I read " + entered + " — not it. Clear it and write it again.", "bad");
-      setTimeout(() => { box.classList.remove("wrong"); }, 400);
+      setFeedback("I read " + entered + " — not it. Write it again.", "bad");
+      // Clear the pad so a double-tap on Check cannot resubmit the same
+      // reading and burn another attempt; the feedback above still shows
+      // what was read. (Previously the old ink stayed and Check re-checked
+      // it, so one misread could cost two attempts.)
+      setTimeout(() => { box.classList.remove("wrong"); entered = ""; clearInk(); renderAnswer(); }, 500);
     }
   }
 }
@@ -581,7 +697,19 @@ $("ovNext").onclick = () => { $("overlay").classList.remove("show"); setLevel(le
 $("ovStay").onclick = () => { $("overlay").classList.remove("show"); cleared = 0; levelTimes = []; renderProgress(); newProblem(); };
 
 $("btnClear").onclick = () => { entered = ""; clearInk(); renderAnswer(); };
-$("btnCheck").onclick = () => { if (readInk(true)) checkAnswer(); else if (entered !== "") checkAnswer(); };
+$("btnCheck").onclick = () => {
+  // Fixed: the old handler checked a PARTIAL reading as a wrong answer
+  // (readInk returned false for a partial number, then the else-branch
+  // checked it anyway) and re-checked stale ink after a wrong attempt.
+  if (inkStrokes.length > 0) {
+    if (readInk(true)) checkAnswer(); // full-length: manual tap = player confirms the best guess, even if ambiguous
+  } else if (entered !== "") {
+    if (entered.length === String(problem.a).length) checkAnswer();
+    else setFeedback("That answer has " + String(problem.a).length + " digits — keep going.", "info");
+  } else {
+    setFeedback("Write the answer first.", "info");
+  }
+};
 
 // ---------------- Drawing pad ----------------
 const canvas = $("pad"), ctx = canvas.getContext("2d");
@@ -589,9 +717,26 @@ let drawing = false, currentStroke = null, inkStrokes = [], readTimer = null, in
 
 function fitCanvas() {
   const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-  canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+  canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.lineWidth = 11; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#7dd3fc";
+  redrawPad();
+}
+// Redraw saved ink after a resize/orientation change. Previously a resize
+// wiped the pad silently; ink is stored in normalized coordinates, so it
+// redraws exactly (normalized x/y = CSS px / pad height * 100).
+function redrawPad() {
+  const r = canvas.getBoundingClientRect();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (const s of inkStrokes) {
+    if (s.length === 0) continue;
+    ctx.beginPath();
+    s.forEach((p, i) => {
+      const px = p[0] / 100 * r.height, py = p[1] / 100 * r.height;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+  }
 }
 window.addEventListener("resize", fitCanvas);
 
@@ -614,6 +759,11 @@ function clearInk() {
 
 // Read everything on the pad as ONE number. Always shows its best reading.
 // Returns true when it filled a complete (full-length) answer.
+// Ambiguity rule (never forces the expected answer): a full-length reading
+// whose best digit is ambiguous (margin < AMBIG_MARGIN) is NOT auto-checked
+// and does NOT count as a wrong attempt — it is shown with its runner-up
+// and the player either rewrites it clearer or taps Check to submit the
+// best guess explicitly. A confident reading auto-checks as before.
 function readInk(manual) {
   if (inkStrokes.length === 0) return false;
   const want = String(problem.a).length;
@@ -622,6 +772,11 @@ function readInk(manual) {
   entered = res.text;
   renderAnswer();
   if (res.text.length === want) {
+    if (res.ambiguous && !manual) {
+      const amb = res.details.find(d => d.ambiguous);
+      setFeedback("That one's unclear — I see " + amb.digit + " (or " + amb.secondDigit + "). Write it clearer, or tap ✓ to go with " + amb.digit + ".", "info");
+      return false;
+    }
     if (!manual) setTimeout(checkAnswer, 200);
     return true;
   }
@@ -634,13 +789,15 @@ function readInk(manual) {
 }
 function scheduleRead() {
   clearTimeout(readTimer);
-  readTimer = setTimeout(() => readInk(false), 800);
+  readTimer = setTimeout(() => readInk(false), 550);
 }
 
+let activePointerId = null;
 canvas.addEventListener("pointerdown", e => {
+  if (drawing) return; // second finger / palm: ignore, do not split the stroke
   e.preventDefault();
-  canvas.setPointerCapture(e.pointerId);
-  drawing = true;
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* capture is best-effort */ }
+  drawing = true; activePointerId = e.pointerId;
   clearTimeout(readTimer);
   // If the ink on the pad was already checked, a new stroke means a fresh try:
   // wipe the pad so the old writing doesn't pollute the new reading.
@@ -652,21 +809,33 @@ canvas.addEventListener("pointerdown", e => {
   $("drawHint").style.display = "none";
 });
 canvas.addEventListener("pointermove", e => {
-  if (!drawing || !currentStroke) return;
+  if (!drawing || !currentStroke || e.pointerId !== activePointerId) return;
   e.preventDefault();
-  const [nx, ny, px, py] = padPos(e);
-  currentStroke.push([nx, ny]);
-  ctx.lineTo(px, py); ctx.stroke();
+  // Coalesced events are the fast-writing fix: without them the browser
+  // delivers ~one point per frame, so a fast loop becomes a straight chord
+  // that cuts its own curve. Coalesced events recover the points in between.
+  const evts = (typeof e.getCoalescedEvents === "function") ? e.getCoalescedEvents() : [e];
+  for (const ev of evts) {
+    const [nx, ny, px, py] = padPos(ev);
+    currentStroke.push([nx, ny]);
+    ctx.lineTo(px, py); ctx.stroke();
+  }
 });
-function endStroke() {
+function endStroke(e) {
   if (!drawing) return;
-  drawing = false;
+  if (e && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
+  drawing = false; activePointerId = null;
   if (currentStroke && currentStroke.length > 1) inkStrokes.push(currentStroke);
   currentStroke = null;
   scheduleRead();
 }
 canvas.addEventListener("pointerup", endStroke);
 canvas.addEventListener("pointercancel", endStroke);
+canvas.addEventListener("lostpointercapture", endStroke);
+// Belt-and-braces scroll block for browsers that still gesture on touch:
+// touch-action:none in CSS does the real work; this only fires if a touch
+// event reaches the canvas, and it must not cancel pointer events.
+canvas.addEventListener("touchmove", e => { if (drawing) e.preventDefault(); }, { passive: false });
 
 // ---------------- Sounds ----------------
 let audioCtx = null;
