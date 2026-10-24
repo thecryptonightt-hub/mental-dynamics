@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Opus Focus — Count Every Move</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #fff; text-align: center; min-height: 100vh; display: flex; flex-direction: column; }
+  header { padding: 18px 16px 4px; }
+  h1 { margin: 0; font-size: 30px; letter-spacing: .5px; }
+  .tag { color: #93c5fd; margin: 6px 0 0; font-size: 15px; }
+  .score { color: #fbbf24; font-weight: 700; margin-top: 8px; font-size: 15px; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 18px; margin: 14px auto; padding: 16px; width: min(520px, 92vw); }
+  .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  button { font-size: 17px; padding: 13px 18px; border-radius: 12px; border: 0; cursor: pointer; font-weight: 700; }
+  .char-btn { background: #334155; color: #fff; flex: 1 1 140px; }
+  .char-btn small { display: block; font-weight: 400; color: #cbd5e1; font-size: 13px; margin-top: 4px; }
+  .char-btn.active, .lvl-btn.active, .pace-btn.active { background: #2563eb; color: #fff; outline: 3px solid #93c5fd; }
+  .lvl-btn, .pace-btn { background: #334155; color: #fff; }
+  .go { background: #16a34a; color: #fff; font-size: 20px; padding: 16px 34px; width: 100%; margin-top: 12px; }
+  .go:disabled { opacity: .5; }
+  #stage { height: 260px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 75%, #1e3a5f 0%, #0f172a 70%); border-radius: 14px; }
+  #performer { font-size: 120px; line-height: 1; will-change: transform; }
+  #beat { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; background: #334155; }
+  #beat.on { background: #facc15; box-shadow: 0 0 22px #facc15; }
+  #status { min-height: 26px; font-size: 18px; font-weight: 700; margin: 12px 0 4px; color: #fde68a; }
+  #hint { color: #cbd5e1; font-size: 14px; min-height: 20px; }
+  input[type=number] { font-size: 26px; width: 150px; padding: 12px; border-radius: 12px; border: 2px solid #475569; text-align: center; background: #0f172a; color: #fff; }
+  .answer-btn { background: #2563eb; color: #fff; font-size: 19px; margin-left: 8px; }
+  .again { background: #334155; color: #fff; margin-top: 12px; }
+  .result { font-size: 22px; font-weight: 800; margin: 10px 0 4px; }
+  .result.good { color: #4ade80; } .result.bad { color: #f87171; }
+  .detail { color: #cbd5e1; font-size: 15px; }
+  .foot { color: #64748b; font-size: 12px; padding: 0 16px 18px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 Opus Focus</h1>
+  <p class="tag">Watch closely. Count every move. No counter — your focus is the game.</p>
+  <div class="score" id="score">Score: 0 &nbsp;•&nbsp; Streak: 0 &nbsp;•&nbsp; Rounds: 0</div>
+</header>
+
+<div class="card" id="setup">
+  <p style="margin:0 0 10px;font-weight:700">1. Pick who to watch</p>
+  <div class="row" id="chars">
+    <button class="char-btn" data-char="ninja">🥷 Ninja<small>jumps backwards</small></button>
+    <button class="char-btn" data-char="gymnast">🤸 Gymnast<small>jumps forward</small></button>
+    <button class="char-btn" data-char="ballerina">🩰 Ballerina<small>turns, every turn counts</small></button>
+  </div>
+  <p style="margin:16px 0 10px;font-weight:700">2. Pick a level</p>
+  <div class="row" id="levels">
+    <button class="lvl-btn active" data-level="1">Level 1 · 18–24</button>
+    <button class="lvl-btn" data-level="2">Level 2 · 35–45</button>
+    <button class="lvl-btn" data-level="3">Level 3 · 50–65</button>
+  </div>
+  <p style="margin:16px 0 10px;font-weight:700">3. Pace</p>
+  <div class="row" id="paces">
+    <button class="pace-btn active" data-pace="fast">Fast</button>
+    <button class="pace-btn" data-pace="steady">Steady</button>
+  </div>
+  <button class="go" id="goBtn" disabled>▶ Watch &amp; Count</button>
+  <p class="detail">Counts are random every round, so you can never just guess last time's number.</p>
+</div>
+
+<div class="card hidden" id="play">
+  <div id="stage"><div id="performer">🥷</div><div id="beat"></div></div>
+  <div id="status">Get ready…</div>
+  <div id="hint">Count every <span id="verb">jump</span>. Don't look away!</div>
+</div>
+
+<div class="card hidden" id="answerCard">
+  <p style="margin:0 0 12px;font-weight:700;font-size:19px">How many <span id="verb2">jumps</span> was that?</p>
+  <input type="number" id="guess" inputmode="numeric" min="1" max="99" placeholder="?">
+  <button class="answer-btn" id="submitBtn">Check</button>
+  <div id="result" class="hidden">
+    <div class="result" id="resultLine"></div>
+    <div class="detail" id="resultDetail"></div>
+    <button class="again" id="againBtn">Play again</button>
+    <button class="again" id="changeBtn">Change character / level</button>
+  </div>
+</div>
+
+<p class="foot">Opus Focus prototype — ninja jumps backwards, gymnast jumps forward, ballerina turns. Level counts: 18–24 / 35–45 / 50–65, picked at random each round.</p>
+
+<script>
+const CHARS = {
+  ninja:    { emoji: '🥷', verb: 'jumps backwards', noun: 'jumps',  flip: -360 },
+  gymnast:  { emoji: '🤸', verb: 'jumps forward',   noun: 'jumps',  flip:  360 },
+  ballerina: { emoji: '🩰', verb: 'turns',           noun: 'turns',  flip:  360 },
+};
+const RANGES = { 1: [18, 24], 2: [35, 45], 3: [50, 65] };
+const PACES = { fast: { jump: 600, pause: 150 }, steady: { jump: 850, pause: 300 } };
+
+let chosenChar = null, level = 1, pace = 'fast', target = 0, done = 0;
+let score = 0, streak = 0, rounds = 0, playing = false;
+
+const $ = id => document.getElementById(id);
+function randInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+function updateScore() { $('score').textContent = `Score: ${score}  •  Streak: ${streak}  •  Rounds: ${rounds}`; }
+function pick(sel, fn) {
+  document.querySelectorAll(sel).forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll(sel).forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); fn(b.dataset);
+  }));
+}
+pick('#chars .char-btn', d => { chosenChar = d.char; $('goBtn').disabled = false; });
+pick('#levels .lvl-btn', d => { level = +d.level; });
+pick('#paces .pace-btn', d => { pace = d.pace; });
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function playRound() {
+  const c = CHARS[chosenChar];
+  const [lo, hi] = RANGES[level];
+  target = randInt(lo, hi); done = 0; playing = true;
+  $('setup').classList.add('hidden');
+  $('answerCard').classList.add('hidden');
+  $('play').classList.remove('hidden');
+  $('performer').textContent = c.emoji;
+  $('verb').textContent = c.noun;
+  $('status').textContent = 'Watch…';
+  await sleep(800);
+  const p = PACES[pace];
+  for (let i = 0; i < target; i++) {
+    $('status').textContent = '…';
+    $('beat').classList.add('on');
+    const anim = $('performer').animate([
+      { transform: 'translateY(0) rotate(0deg)' },
+      { transform: `translateY(-84px) rotate(${c.flip / 2}deg)`, offset: 0.5 },
+      { transform: `translateY(0) rotate(${c.flip}deg)` },
+    ], { duration: p.jump, easing: 'ease-in-out' });
+    await anim.finished;
+    $('performer').style.transform = 'none';
+    $('beat').classList.remove('on');
+    done++;
+    await sleep(p.pause);
+  }
+  playing = false;
+  $('status').textContent = 'Done! How many was that?';
+  $('play').classList.add('hidden');
+  $('answerCard').classList.remove('hidden');
+  $('result').classList.add('hidden');
+  $('verb2').textContent = c.noun;
+  $('guess').value = '';
+  $('guess').focus();
+}
+
+function check() {
+  const g = parseInt($('guess').value, 10);
+  if (!g || g < 1) { $('guess').focus(); return; }
+  rounds++;
+  const c = CHARS[chosenChar];
+  $('result').classList.remove('hidden');
+  if (g === target) {
+    score += level * 10; streak++;
+    $('resultLine').textContent = `✅ Exactly right — ${target}!`;
+    $('resultLine').className = 'result good';
+    $('resultDetail').textContent = `The ${c.verb} ${target} times. Nice focus.`;
+  } else {
+    streak = 0;
+    $('resultLine').textContent = `Not quite — it was ${target}.`;
+    $('resultLine').className = 'result bad';
+    $('resultDetail').textContent = `You said ${g} — off by ${Math.abs(g - target)}. Watch the ${c.noun} one at a time next round.`;
+  }
+  updateScore();
+}
+
+$('goBtn').addEventListener('click', playRound);
+$('submitBtn').addEventListener('click', check);
+$('guess').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+$('againBtn').addEventListener('click', playRound);
+$('changeBtn').addEventListener('click', () => {
+  $('answerCard').classList.add('hidden');
+  $('setup').classList.remove('hidden');
+});
+updateScore();
+</script>
+</body>
+</html>
