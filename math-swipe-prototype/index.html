@@ -56,7 +56,7 @@
   .dot.on { background:#22c55e; }
   .draw-wrap { position:relative; }
   canvas {
-    width:100%; height:270px; display:block; border-radius:20px; touch-action:none;
+    width:100%; height:300px; display:block; border-radius:20px; touch-action:none;
     background:linear-gradient(180deg, rgba(56,189,248,.07), rgba(56,189,248,.02));
     border:2px solid rgba(56,189,248,.45); cursor:crosshair;
   }
@@ -166,7 +166,10 @@ const DIGIT_TEMPLATES = {
   "4": [ [ [[60,96],[60,8],[15,60],[90,60]] ],
          [ [[18,12],[12,58],[88,58]], [[58,8],[58,96]] ] ],
   "5": [ [ [[79,7],[31,7],[27,38],[47,30],[69,37],[81,53],[75,77],[53,91],[28,87],[17,72]] ],
-         [ [[80,6],[28,6],[26,38]], [[47,30],[70,38],[81,56],[73,81],[50,93],[26,87],[17,72]] ] ],
+         [ [[80,6],[28,6],[26,38]], [[47,30],[70,38],[81,56],[73,81],[50,93],[26,87],[17,72]] ],
+         [ [[82,6],[26,6],[24,44],[56,36],[80,50],[76,76],[52,92],[26,88],[16,70]] ],
+         [ [[22,8],[52,6],[80,8],[77,28],[70,36],[79,50],[78,68],[64,84],[44,90],[26,84],[16,68]] ],
+         [ [[22,8],[80,8]], [[32,26],[28,44],[34,62],[50,76],[68,76],[78,64],[74,50],[60,46]] ] ],
   "6": [ [ [[72,11],[47,21],[29,45],[22,69],[29,87],[49,96],[69,89],[80,72],[73,54],[53,46],[35,55],[27,71]] ] ],
   "7": [ [ [[13,9],[87,9],[50,97]] ],
          [ [[13,9],[87,9],[50,97]], [[33,50],[73,50]] ] ],
@@ -267,15 +270,34 @@ for (const d of Object.keys(DIGIT_TEMPLATES)) {
 // Calibrated from simulated-stroke tests: correct drawings score below this.
 const ACCEPT_DIST = 1.30;
 
+// Direction-invariant matching: people draw the same digit in opposite stroke
+// directions (e.g. the top bar of a 5 left-to-right vs right-to-left). Test the
+// drawn strokes as-is AND with each stroke reversed (stroke order kept), plus the
+// fully reversed order for multi-stroke digits. Cheap at 32 points/cloud.
+function inputClouds(strokes) {
+  const clouds = [];
+  const fwd = strokesToCloud(strokes);
+  if (fwd) clouds.push(fwd);
+  const revEach = strokesToCloud(strokes.map(s => s.slice().reverse()));
+  if (revEach && revEach !== fwd) clouds.push(revEach);
+  if (strokes.length > 1) {
+    const revAll = strokesToCloud(strokes.slice().reverse().map(s => s.slice().reverse()));
+    if (revAll) clouds.push(revAll);
+  }
+  return clouds;
+}
+
 function recognizeDigit(strokes) {
-  const cloud = strokesToCloud(strokes);
-  if (!cloud) return null;
+  const clouds = inputClouds(strokes);
+  if (clouds.length === 0) return null;
   let bestDigit = null, bestDist = Infinity, secondDist = Infinity;
   for (const d of Object.keys(TEMPLATE_CLOUDS)) {
     for (const tc of TEMPLATE_CLOUDS[d]) {
-      const dist = cloudMatch(cloud, tc);
-      if (dist < bestDist) { secondDist = bestDist; bestDist = dist; bestDigit = d; }
-      else if (dist < secondDist) { secondDist = dist; }
+      for (const cloud of clouds) {
+        const dist = cloudMatch(cloud, tc);
+        if (dist < bestDist) { secondDist = bestDist; bestDist = dist; bestDigit = d; }
+        else if (dist < secondDist) { secondDist = dist; }
+      }
     }
   }
   return { digit: bestDigit, distance: bestDist, margin: secondDist - bestDist };
@@ -442,7 +464,13 @@ window.addEventListener("resize", fitCanvas);
 
 function padPos(e) {
   const r = canvas.getBoundingClientRect();
-  return [((e.clientX - r.left) / r.width) * 100, ((e.clientY - r.top) / r.height) * 100, e.clientX - r.left, e.clientY - r.top];
+  // Equal units-per-pixel on BOTH axes (height is the reference). The pad is wider
+  // than it is tall — scaling x and y separately squashes every drawn digit sideways
+  // before the recognizer sees it. That was the "can't read my 5" bug: a 1 (just a
+  // line) survived the squash, a 5 did not.
+  const nx = ((e.clientX - r.left) / r.height) * 100;
+  const ny = ((e.clientY - r.top) / r.height) * 100;
+  return [nx, ny, e.clientX - r.left, e.clientY - r.top];
 }
 function clearPad() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 function scheduleRecognize() {
