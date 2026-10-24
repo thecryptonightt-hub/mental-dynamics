@@ -542,7 +542,29 @@ function segmentStrokes(strokes, expectedCount) {
       let leftMax = -Infinity;
       for (let j = 0; j < cut; j++) leftMax = Math.max(leftMax, strokeBox(ss[j]).maxX);
       const boxGap = strokeBox(ss[cut]).minX - leftMax;
-      if (!(boxGap > 0 || bestGap >= 18)) break; // stacked strokes of one digit: do not split
+      // FIX 2026-10-24 (13 read as 9/6/8): a narrow "1" written overlapping
+      // a "3" also fails both tests above (centres only ~11 apart at phone
+      // scale, box gap negative), so the pair stayed one group and the
+      // merged shape read as a single digit (9/6/8 by handwriting). But an
+      // overlapping pair is NOT stacked strokes: its sides sit in the same
+      // vertical band (unlike an 8's loops, one above the other) and each
+      // side reads as a clean digit on its own. A lone multi-stroke digit
+      // fails this test: its sides are either stacked (8, 5) or one side
+      // is a fragment (a 4's diagonal+bar scores ~129). Threshold 36:
+      // jittered true digits top out at ~31, fragments bottom out at ~42.
+      // Scale-free: all comparisons are ratios of the group height. This
+      // is only an extra way to split: a miss behaves exactly like today.
+      let sidePair = false;
+      {
+        const centre = strokes => { let sx = 0, sy = 0, n = 0; for (const s of strokes) for (const p of s) { sx += p[0]; sy += p[1]; n++; } return { x: sx / n, y: sy / n }; };
+        const lc = centre(ss.slice(0, cut)), rc = centre(ss.slice(cut));
+        const gh = Math.max(1, strokeBBox(g).h);
+        if (Math.abs(lc.y - rc.y) <= 0.30 * gh && Math.abs(lc.x - rc.x) >= 0.12 * gh) {
+          const ld = recognizeDigit(ss.slice(0, cut)), rd = recognizeDigit(ss.slice(cut));
+          sidePair = !!(ld && rd && ld.distance <= 36 && rd.distance <= 36);
+        }
+      }
+      if (!(boxGap > 0 || bestGap >= 18 || sidePair)) break; // stacked strokes of one digit: do not split
       groups.splice(widestI, 1, ss.slice(0, cut), ss.slice(cut));
       continue;
     }
