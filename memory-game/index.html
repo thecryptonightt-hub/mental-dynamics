@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>The Mental Gym — Memory Trainer | Mental Dynamics</title>
-<meta name="description" content="The Mental Gym: memory games by Mental Dynamics — A Mental Fitness Company. Card match, number flash, and picture flash. Train your brain like a muscle.">
+<meta name="description" content="The Mental Gym: memory games by Mental Dynamics — A Mental Fitness Company. Card match, number flash, picture flash, and Opus Focus. Train your brain like a muscle.">
 <style>
   :root{
     --sky:#E8F4FD; --sky2:#D3EAFB; --ink:#0B3A53; --blue:#0B6FA4;
@@ -167,6 +167,37 @@
     display:block; margin:12px auto 0; background:none; border:none; color:var(--blue);
     font-weight:700; font-size:14px; cursor:pointer; text-decoration:underline;
   }
+#scr-opus .score { color: #fbbf24; font-weight: 700; margin-top: 8px; font-size: 15px; }
+#scr-opus .card { background: #1e293b; border: 1px solid #334155; border-radius: 18px; margin: 14px auto; padding: 16px; width: min(520px, 92vw); }
+#scr-opus .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+#scr-opus button { font-size: 17px; padding: 13px 18px; border-radius: 12px; border: 0; cursor: pointer; font-weight: 700; }
+#scr-opus .char-btn { background: #334155; color: #fff; flex: 1 1 140px; }
+#scr-opus .char-btn small { display: block; font-weight: 400; color: #cbd5e1; font-size: 13px; margin-top: 4px; }
+#scr-opus .char-btn.active, #scr-opus .lvl-btn.active, #scr-opus .pace-btn.active { background: #2563eb; color: #fff; outline: 3px solid #93c5fd; }
+#scr-opus .lvl-btn, #scr-opus .pace-btn { background: #334155; color: #fff; }
+#scr-opus .go { background: #16a34a; color: #fff; font-size: 20px; padding: 16px 34px; width: 100%; margin-top: 12px; }
+#scr-opus .go:disabled { opacity: .5; }
+#scr-opus #stage { height: 260px; display: flex; align-items: center; justify-content: center; gap: 24px; position: relative; overflow: hidden; background: radial-gradient(circle at 50% 75%, #1e3a5f 0%, #0f172a 70%); border-radius: 14px; }
+#scr-opus .performer { font-size: 120px; line-height: 1; will-change: transform; }
+#scr-opus .performer.multi { font-size: 84px; }
+#scr-opus #stage.trio { gap: 10px; }
+#scr-opus #stage.trio .performer { font-size: 56px; }
+#scr-opus #beat { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; background: #334155; }
+#scr-opus #beat.on { background: #facc15; box-shadow: 0 0 22px #facc15; }
+#scr-opus #status { min-height: 26px; font-size: 18px; font-weight: 700; margin: 12px 0 4px; color: #fde68a; }
+#scr-opus #hint { color: #cbd5e1; font-size: 14px; min-height: 20px; }
+#scr-opus input[type=number] { font-size: 26px; width: 150px; padding: 12px; border-radius: 12px; border: 2px solid #475569; text-align: center; background: #0f172a; color: #fff; }
+#scr-opus .answer-btn { background: #2563eb; color: #fff; font-size: 19px; margin-left: 8px; }
+#scr-opus .again { background: #334155; color: #fff; margin-top: 12px; }
+#scr-opus .result { font-size: 22px; font-weight: 800; margin: 10px 0 4px; }
+#scr-opus .result.good { color: #4ade80; }
+#scr-opus .result.bad { color: #f87171; }
+#scr-opus .detail { color: #cbd5e1; font-size: 15px; }
+#scr-opus .hidden { display: none !important; }
+#scr-opus .op-panel { background:#0f172a; border-radius:20px; padding:10px 12px 16px; width:min(94vw,430px); text-align:center; }
+#scr-opus .card { width:100%; text-align:center; }
+#scr-opus .score { text-align:center; }
+
 </style>
 </head>
 <body>
@@ -197,6 +228,12 @@
         <span class="ds" style="display:block;">Lions, zebras, Ferraris, Lambos and more flash on screen — count them before they vanish. The clock shrinks from 5s to 2s as you climb.</span>
         <span class="pr" id="pr-pictures" style="display:block;"></span></span>
       </button>
+      <button class="game-btn" id="go-opus">
+        <span class="ic">🎯</span>
+        <span><span class="tt">Opus Focus</span>
+        <span class="ds" style="display:block;">Watch a character flip, jump or turn — and count every move. No counter. Levels 1–3 solo, Duo and Trio in 4–5.</span>
+        <span class="pr" id="pr-opus" style="display:block;"></span></span>
+      </button>
     </div>
     <p class="tag" style="margin-top:12px; text-align:center;">🎁 Level 1 of every game is free — the full version unlocks all levels for $1.99.</p>
   </section>
@@ -217,7 +254,7 @@
     </div>
     <div id="board" aria-label="Memory game board"></div>
     <button class="big-btn" id="newgame">↻ New Game</button>
-    <div class="unlock-box" id="unlock-cards"><div class="t">🔒 Medium &amp; Hard are in the full version</div><div class="d">Easy is always free. The full version unlocks every Card Match difficulty — plus all 16 Number Flash levels and all 12 Picture Flash levels.</div><a class="buy-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a></div>
+    <div class="unlock-box" id="unlock-cards"><div class="t">🔒 Medium &amp; Hard are in the full version</div><div class="d">Easy is always free. The full version unlocks every Card Match difficulty — plus all 16 Number Flash levels, all 12 Picture Flash levels, and Opus Focus levels 2–5.</div><a class="buy-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a></div>
   </section>
 
   <!-- NUMBER FLASH -->
@@ -255,6 +292,61 @@
     <div class="unlock-box" id="unlock-pictures"><div class="t">🔒 Levels 2–12 are in the full version</div><div class="d">Level 1 is always free. Unlock all 12 Picture Flash levels — animals, supercars, and the 2-second rounds.</div><a class="buy-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a></div>
   </section>
 
+  <!-- OPUS FOCUS -->
+  <section class="screen" id="scr-opus">
+    <button class="back" data-back>← All games</button>
+    <h2 class="gtitle">🎯 Opus Focus</h2>
+    <p class="howto">Watch closely. Count every move. No counter — your focus is the game.</p>
+    <div class="op-panel">
+    <div class="score" id="score">Score: 0 &nbsp;•&nbsp; Streak: 0 &nbsp;•&nbsp; Rounds: 0</div>
+    <div class="card" id="setup">
+  <p style="margin:0 0 10px;font-weight:700">1. Pick who to watch (Levels 1–3 only)</p>
+  <div class="row" id="chars">
+    <button class="char-btn" data-char="ninja">🥷 Ninja<small>jumps backwards</small></button>
+    <button class="char-btn" data-char="gymnast">🤸 Gymnast<small>jumps forward</small></button>
+    <button class="char-btn" data-char="ballerina">💃 Dancer<small>turns, every turn counts</small></button>
+  </div>
+  <p style="margin:16px 0 10px;font-weight:700">2. Pick a level</p>
+  <div class="row" id="levels">
+    <button class="lvl-btn active" data-level="1">Level 1 · 18–24</button>
+    <button class="lvl-btn" data-level="2">Level 2 · 35–45</button>
+    <button class="lvl-btn" data-level="3">Level 3 · 50–65</button>
+    <button class="lvl-btn" data-level="4">Level 4 · Duo · 30–40 flips</button>
+    <button class="lvl-btn" data-level="5">Level 5 · Trio · 45–60 flips</button>
+  </div>
+  <p class="detail">Levels 4–5 use two or three characters at once — no need to pick one. Sometimes one flips, sometimes two, sometimes all. Count every flip.</p>
+  <p style="margin:16px 0 10px;font-weight:700">3. Pace</p>
+  <div class="row" id="paces">
+    <button class="pace-btn" data-pace="steady">Steady</button>
+    <button class="pace-btn active" data-pace="fast">Fast</button>
+    <button class="pace-btn" data-pace="faster">Faster</button>
+  </div>
+  <p class="detail">Paces run slow to fast, left to right. Single-character levels (1–3) offer Fast and Faster. Duo/Trio (4–5) offer Steady and Fast, since there's more to track.</p>
+  <button class="go" id="goBtn" disabled>▶ Watch &amp; Count</button>
+  <p class="detail">Counts are random every round, so you can never just guess last time's number.</p>
+</div>
+
+    <div class="card hidden" id="play">
+  <div id="stage"><div id="beat"></div></div>
+  <div id="status">Get ready…</div>
+  <div id="hint">Count every <span id="verb">jump</span>. Don't look away!</div>
+</div>
+
+    <div class="card hidden" id="answerCard">
+  <p style="margin:0 0 12px;font-weight:700;font-size:19px">How many <span id="verb2">jumps</span> was that?</p>
+  <input type="number" id="guess" inputmode="numeric" min="1" max="99" placeholder="?">
+  <button class="answer-btn" id="submitBtn">Check</button>
+  <div id="result" class="hidden">
+    <div class="result" id="resultLine"></div>
+    <div class="detail" id="resultDetail"></div>
+    <button class="again" id="againBtn">Play again</button>
+    <button class="again" id="changeBtn">Change character / level</button>
+  </div>
+</div>
+
+    </div>
+  <div class="unlock-box" id="unlock-opus"><div class="t">🔒 Levels 2–5 are in the full version</div><div class="d">Level 1 is always free. Unlock Duo, Trio and every Opus Focus level — plus all levels of every other game.</div><a class="buy-btn" href="https://square.link/u/SpgyprsK" target="_blank" rel="noopener">Unlock all levels — $1.99</a></div>
+  </section>
   <footer>
     <div class="lockup">MENTAL DYNAMICS · A MENTAL FITNESS COMPANY</div>
     <div class="cta">Free consultation — <a href="tel:+19548512138">Call or text 954-851-2138</a> · Plantation, FL</div>
@@ -284,7 +376,7 @@
   function store(k,v){ try{ if(v===undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); }catch(e){ return null; } }
 
   /* ---------- Navigation ---------- */
-  var screens = { home:$("scr-home"), cards:$("scr-cards"), numbers:$("scr-numbers"), pictures:$("scr-pictures") };
+  var screens = { home:$("scr-home"), cards:$("scr-cards"), numbers:$("scr-numbers"), pictures:$("scr-pictures"), opus:$("scr-opus") };
   function show(name){
     for(var k in screens) screens[k].classList.toggle("on", k===name);
     window.scrollTo(0,0);
@@ -295,6 +387,7 @@
   $("go-cards").addEventListener("click", function(){ show("cards"); });
   $("go-numbers").addEventListener("click", function(){ show("numbers"); });
   $("go-pictures").addEventListener("click", function(){ show("pictures"); });
+  $("go-opus").addEventListener("click", function(){ show("opus"); });
 
   function renderHomeProgress(){
     var n = store("mg_numbers_unlocked") || 1;
@@ -371,7 +464,7 @@
     if(isBest) store(bestKey(), {moves:moves, time:seconds});
     renderBest();
     $("finalscore").innerHTML = "Finished in <b>"+moves+" moves</b> · <b>"+fmt(seconds)+"</b>";
-    $("bestline").textContent = (isBest ? "🏆 New personal best! " : "") + (FREE_MODE ? "🔒 The full version unlocks Medium & Hard — and every level of Number Flash and Picture Flash — for $1.99." : "");
+    $("bestline").textContent = (isBest ? "🏆 New personal best! " : "") + (FREE_MODE ? "🔒 The full version unlocks Medium & Hard — and every level of Number Flash, Picture Flash, and Opus Focus — for $1.99." : "");
     setTimeout(function(){ overlay.classList.add("show"); }, 450);
   }
   var dbtns = document.querySelectorAll(".controls button");
@@ -644,6 +737,183 @@
     if(picSel < PIC_MAX){ picSel++; renderPicLevels(); picStageLabel(); resetPicStage(); $("pic-start").click(); }
   });
   renderPicLevels(); picStageLabel(); resetPicStage();
+
+  /* ---------- Opus Focus (merged 2026-10-24) ---------- */
+  (function(){
+
+const CHARS = {
+  ninja:    { emoji: '🥷', name: 'Ninja',    verb: 'jumps backwards', noun: 'jumps',  flip: -360 },
+  gymnast:  { emoji: '🤸', name: 'Gymnast',  verb: 'jumps forward',   noun: 'jumps',  flip:  360 },
+  ballerina: { emoji: '💃', name: 'Dancer', verb: 'turns',           noun: 'turns',  flip:  360 },
+};
+const RANGES = { 1: [18, 24], 2: [35, 45], 3: [50, 65], 4: [30, 40], 5: [45, 60] };
+const PACES = { faster: { jump: 450, pause: 100 }, fast: { jump: 600, pause: 150 }, steady: { jump: 850, pause: 300 } };
+// Pace options depend on the level: single-character levels (1-3) offer
+// Faster + Fast (Steady felt too slow there); Duo/Trio (4-5) offer Fast +
+// Steady, since tracking several characters at once is already harder.
+function syncPaces() {
+  const multi = level >= 4;
+  document.querySelectorAll('#paces .pace-btn').forEach(b => {
+    const show = b.dataset.pace === 'fast' || (multi ? b.dataset.pace === 'steady' : b.dataset.pace === 'faster');
+    b.classList.toggle('hidden', !show);
+  });
+  if (multi && pace === 'faster') pace = 'fast';
+  if (!multi && pace === 'steady') pace = 'fast';
+  document.querySelectorAll('#paces .pace-btn').forEach(b => b.classList.toggle('active', b.dataset.pace === pace));
+}
+
+let chosenChar = null, level = 1, pace = 'fast', target = 0, done = 0;
+let score = 0, streak = 0, rounds = 0, playing = false;
+let roundChars = [], roundLabel = '';
+
+const $ = id => document.getElementById(id);
+function randInt(lo, hi) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function updateScore() { $('score').textContent = `Score: ${score}  •  Streak: ${streak}  •  Rounds: ${rounds}`; }
+function refreshGo() { $('goBtn').disabled = !(level >= 4 || chosenChar); }
+function pick(sel, fn) {
+  document.querySelectorAll(sel).forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll(sel).forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); fn(b.dataset);
+  }));
+}
+pick('#chars .char-btn', d => { chosenChar = d.char; refreshGo(); });
+pick('#levels .lvl-btn', d => {
+    if (FREE_MODE && +d.level !== 1) {
+      showUnlock('unlock-opus');
+      document.querySelectorAll('#levels .lvl-btn').forEach(x => x.classList.toggle('active', x.dataset.level === '1'));
+      level = 1; refreshGo(); syncPaces(); return;
+    }
+    hideUnlock('unlock-opus'); level = +d.level; refreshGo(); syncPaces();
+  });
+pick('#paces .pace-btn', d => { pace = d.pace; });
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Build the list of flip events for a Duo/Trio round: each event flips a
+// random subset (1..all) of the characters at once, and the subset sizes
+// add up to exactly the target total.
+function buildEvents(chars, total) {
+  const events = [];
+  let remaining = total;
+  while (remaining > 0) {
+    const k = randInt(1, Math.min(chars.length, remaining));
+    events.push(shuffle(chars).slice(0, k));
+    remaining -= k;
+  }
+  return events;
+}
+
+async function playRound() {
+  const multi = level >= 4;
+  if (multi) {
+    roundChars = level === 4 ? shuffle(Object.keys(CHARS)).slice(0, 2) : Object.keys(CHARS);
+  } else {
+    roundChars = [chosenChar];
+  }
+  roundLabel = roundChars.map(k => CHARS[k].name).join(' + ');
+  const [lo, hi] = RANGES[level];
+  target = randInt(lo, hi); done = 0; playing = true;
+  $('setup').classList.add('hidden');
+  $('answerCard').classList.add('hidden');
+  $('play').classList.remove('hidden');
+  const stage = $('stage');
+  stage.querySelectorAll('.performer').forEach(el => el.remove());
+  stage.classList.toggle('trio', roundChars.length === 3);
+  const performers = {};
+  roundChars.forEach(k => {
+    const el = document.createElement('div');
+    el.className = 'performer' + (multi ? ' multi' : '');
+    el.textContent = CHARS[k].emoji;
+    stage.insertBefore(el, $('beat'));
+    performers[k] = el;
+  });
+  $('verb').textContent = multi ? 'flip' : CHARS[chosenChar].noun;
+  $('status').textContent = 'Watch…';
+  await sleep(800);
+  const p = PACES[pace];
+  if (!multi) {
+    const c = CHARS[chosenChar];
+    for (let i = 0; i < target; i++) {
+      $('status').textContent = '…';
+      $('beat').classList.add('on');
+      const anim = performers[chosenChar].animate([
+        { transform: 'translateY(0) rotate(0deg)' },
+        { transform: `translateY(-84px) rotate(${c.flip / 2}deg)`, offset: 0.5 },
+        { transform: `translateY(0) rotate(${c.flip}deg)` },
+      ], { duration: p.jump, easing: 'ease-in-out' });
+      await anim.finished;
+      performers[chosenChar].style.transform = 'none';
+      $('beat').classList.remove('on');
+      done++;
+      await sleep(p.pause);
+    }
+  } else {
+    const events = buildEvents(roundChars, target);
+    for (const subset of events) {
+      $('status').textContent = '…';
+      $('beat').classList.add('on');
+      const anims = subset.map(k => {
+        const c = CHARS[k];
+        return performers[k].animate([
+          { transform: 'translateY(0) rotate(0deg)' },
+          { transform: `translateY(-84px) rotate(${c.flip / 2}deg)`, offset: 0.5 },
+          { transform: `translateY(0) rotate(${c.flip}deg)` },
+        ], { duration: p.jump, easing: 'ease-in-out' });
+      });
+      await Promise.all(anims.map(a => a.finished));
+      subset.forEach(k => { performers[k].style.transform = 'none'; });
+      $('beat').classList.remove('on');
+      done += subset.length;
+      await sleep(p.pause);
+    }
+  }
+  playing = false;
+  $('status').textContent = 'Done! How many was that?';
+  $('play').classList.add('hidden');
+  $('answerCard').classList.remove('hidden');
+  $('result').classList.add('hidden');
+  $('verb2').textContent = multi ? 'flips' : CHARS[chosenChar].noun;
+  $('guess').value = '';
+  $('guess').focus();
+}
+
+function check() {
+  const g = parseInt($('guess').value, 10);
+  if (!g || g < 1) { $('guess').focus(); return; }
+  rounds++;
+  const multi = level >= 4;
+  $('result').classList.remove('hidden');
+  if (g === target) {
+    score += level * 10; streak++;
+    $('resultLine').textContent = `✅ Exactly right — ${target}!`;
+    $('resultLine').className = 'result good';
+    $('resultDetail').textContent = multi
+      ? `${roundLabel} flipped ${target} times between them. Nice focus.`
+      : `The ${CHARS[chosenChar].verb} ${target} times. Nice focus.`;
+  } else {
+    streak = 0;
+    $('resultLine').textContent = `Not quite — it was ${target}.`;
+    $('resultLine').className = 'result bad';
+    $('resultDetail').textContent = multi
+      ? `You said ${g} — off by ${Math.abs(g - target)}. Count every flip next round, even when they move together.`
+      : `You said ${g} — off by ${Math.abs(g - target)}. Watch the ${CHARS[chosenChar].noun} one at a time next round.`;
+  }
+  updateScore();
+}
+
+$('goBtn').addEventListener('click', playRound);
+$('submitBtn').addEventListener('click', check);
+$('guess').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+$('againBtn').addEventListener('click', playRound);
+$('changeBtn').addEventListener('click', () => {
+  $('answerCard').classList.add('hidden');
+  $('setup').classList.remove('hidden');
+});
+syncPaces();
+updateScore();
+
+  })();
   renderHomeProgress();
 })();
 </script>
