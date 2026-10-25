@@ -77,7 +77,6 @@
     background:rgba(255,255,255,.10); color:#eaf4ff;
   }
   .btn:active { transform:scale(.97); }
-  .btn.check { background:#22c55e; color:#052e16; flex:1.4; }
   .btn.small { flex:0 0 56px; }
   .feedback { min-height:26px; text-align:center; font-size:17px; font-weight:700; }
   .feedback.good { color:#4ade80; }
@@ -134,7 +133,6 @@
 
   <div class="controls">
     <button class="btn" id="btnClear">Clear</button>
-    <button class="btn check" id="btnCheck">✓ Check it</button>
     <button class="btn small" id="btnPad" title="Backup keypad">⌨️</button>
   </div>
 
@@ -189,10 +187,11 @@
 //    beats an untestable model download.
 // Confidence: margin = (second-best distance - best distance) / second-best
 // distance. A small margin means the shape is genuinely close to two digits.
-// The game NEVER uses the expected answer to override a reading: an
-// ambiguous full-length reading is shown, not auto-checked, and only the
-// player tapping Check submits the best guess. A confident wrong reading
-// is still marked wrong — that is the game working, not cheating.
+// The game NEVER uses the expected answer to override a reading: every
+// full-length reading auto-checks on the timer, confident or ambiguous
+// (Bryan's direction 2026-10-24: no Check button — the game judges the
+// best reading it got). A wrong reading is still marked wrong — that is
+// the game working, not cheating.
 const AMBIG_MARGIN = 0.25;
 
 const BASE_DIGITS = {
@@ -219,19 +218,34 @@ const BASE_DIGITS = {
     [[[0,80],[10,50],[22,14],[30,0]],[[30,0],[33,25],[34,60],[34,100]]],
     [[[4,75],[12,45],[24,10],[30,0]],[[30,0],[31,30],[32,65],[32,100]]],
     [[[0,71],[8,45],[20,12],[27,0],[29,23],[30,56],[31,100]]],
-    [[[0,65],[9,42],[20,12],[28,0]],[[28,0],[30,22],[31,50],[31,90]]]
+    [[[0,65],[9,42],[20,12],[28,0]],[[28,0],[30,22],[31,50],[31,90]]],
+    // Bryan playtest styles (?v=10, 2026-10-25, traced from his ?v=9 screenshots):
+    // his hooked caret 1, small start curl, long right leg (play-5 style)
+    [[[34,30],[30,24],[36,18],[43,2],[67,98]]]
   ],
   "2": [
     [[[15,26],[24,11],[45,4],[67,7],[81,19],[79,35],[64,53],[33,80],[16,93],[87,93]]],
     [[[20,14],[44,6],[70,8],[80,20],[66,44],[24,84],[16,94],[86,94]]],
     [[[16,28],[26,10],[50,4],[72,12],[74,30],[52,52],[26,76],[18,90],[44,95],[76,92],[90,86]]],
-    [[[28,26],[36,10],[56,6],[72,14],[68,30],[52,40],[36,52],[24,72],[22,90],[80,90]]]
+    [[[28,26],[36,10],[56,6],[72,14],[68,30],[52,40],[36,52],[24,72],[22,90],[80,90]]],
+    // Bryan playtest styles (?v=10, 2026-10-25, traced from his ?v=9 screenshots):
+    // his flowing 2 with bottom loop and tail flick (play-2)
+    [[[17,28],[37,10],[62,2],[74,11],[67,28],[49,47],[33,63],[28,84],[40,98],[62,97],[70,79],[60,58],[49,49],[68,44],[83,37]]],
+    // his cursive 2 with bottom loop (play-6 style)
+    [[[16,41],[36,16],[50,2],[66,27],[59,52],[84,45],[59,75],[34,98],[50,73],[59,52]]],
+    // his looping 2 (play-7 style)
+    [[[18,40],[37,18],[62,2],[72,26],[72,51],[55,75],[38,98],[49,81],[82,59]]]
   ],
   "3": [
     [[[19,15],[41,5],[65,7],[78,19],[70,36],[49,45],[69,51],[81,66],[72,86],[46,96],[23,88],[15,74]]],
     [[[16,10],[84,10],[58,44],[76,54],[82,72],[66,92],[36,95],[16,84]]],
     [[[22,12],[48,5],[72,10],[74,26],[52,44],[76,56],[78,76],[58,93],[30,92],[18,78]]],
-    [[[15,17],[43,4],[69,11],[71,31],[47,43],[71,53],[79,73],[61,94],[29,96],[13,81]]]
+    [[[15,17],[43,4],[69,11],[71,31],[47,43],[71,53],[79,73],[61,94],[29,96],[13,81]]],
+    // Bryan playtest styles (?v=10, 2026-10-25, traced from his ?v=9 screenshots):
+    // his flowing open 3 (play-3 style)
+    [[[10,25],[28,17],[49,6],[70,2],[81,10],[77,25],[68,37],[80,41],[90,50],[83,69],[70,88],[54,98]]],
+    // his pointed 3, sharp middle beak, open bowl (play-4 style)
+    [[[17,21],[59,2],[25,54],[56,48],[83,47],[79,72],[59,93],[33,98]]]
   ],
   "4": [
     [[[60,96],[60,8],[15,60],[90,60]]],
@@ -269,7 +283,10 @@ const BASE_DIGITS = {
     [[[68,40],[55,46],[42,44],[36,48],[32,58],[30,68],[36,78],[50,82],[64,80],[70,74],[58,86],[46,92]]],
     [[[66,38],[54,44],[42,42],[36,48],[32,60],[32,70],[40,80],[54,84],[66,80],[70,72],[60,84],[48,92]]],
     [[[70,42],[56,48],[44,46],[38,50],[34,60],[32,70],[40,80],[54,84],[68,82],[72,76],[64,86],[50,94]]],
-    [[[64,36],[52,42],[40,40],[36,46],[32,56],[30,66],[38,76],[52,80],[66,78],[70,72],[60,82],[48,90]]]
+    [[[64,36],[52,42],[40,40],[36,46],[32,56],[30,66],[38,76],[52,80],[66,78],[70,72],[60,82],[48,90]]],
+    // Bryan playtest styles (?v=10, 2026-10-25, traced from his ?v=9 screenshots):
+    // his flat-top 5, curved belly, hook end (play-7 style)
+    [[[24,9],[76,2],[54,21],[38,42],[60,58],[72,73],[57,88],[38,98]]]
   ],
   "6": [
     [[[72,11],[47,21],[29,45],[22,69],[29,87],[49,96],[69,89],[80,72],[73,54],[53,46],[35,55],[27,71]]],
@@ -285,7 +302,16 @@ const BASE_DIGITS = {
     [[[13,9],[87,9],[50,97]],[[33,50],[73,50]]],
     [[[22,22],[30,8],[88,8],[52,97]]],
     [[[8,8],[92,8],[44,97]]],
-    [[[14,10],[86,10],[60,56],[44,94]]]
+    [[[14,10],[86,10],[60,56],[44,94]]],
+    // Finger-smoothed 7s (?v=10, 2026-10-25): finger writing rounds
+    // the 7 corner, and smoothed 7s sat on the pointed-3 boundary
+    // (margins 0.06-0.12) and flipped to 3 under jitter. These are
+    // the library 7s Chaikin-smoothed (same smoothing the test uses).
+    [[[13,9],[18,9],[27,9],[41,9],[59,9],[71,14],[75,26],[73,42],[64,64],[57,80],[52,92],[50,97]]],
+    [[[13,9],[18,9],[27,9],[41,9],[59,9],[71,14],[75,26],[73,42],[64,64],[57,80],[52,92],[50,97]],[[33,50],[36,50],[40,50],[48,50],[58,50],[66,50],[70,50],[73,50]]],
+    [[[22,22],[22,21],[24,19],[25,17],[27,13],[32,11],[40,9],[52,8],[66,8],[75,14],[78,25],[74,41],[66,64],[59,80],[54,91],[52,97]]],
+    [[[8,8],[13,8],[24,8],[40,8],[60,8],[73,14],[78,25],[74,41],[62,64],[53,80],[47,91],[44,97]]],
+    [[[14,10],[18,10],[28,10],[41,10],[59,10],[71,13],[77,19],[76,27],[70,39],[64,50],[59,60],[54,70],[50,80],[47,87],[45,92],[44,94]]]
   ],
   "8": [
     [[[50,45],[35,34],[30,18],[40,6],[59,4],[71,13],[69,29],[55,43],[48,52],[35,63],[31,79],[42,94],[61,95],[74,84],[72,64],[57,50],[50,45]]],
@@ -304,14 +330,24 @@ const BASE_DIGITS = {
     [[[50,4],[68,8],[74,22],[62,36],[50,42],[36,52],[28,68],[34,88],[52,96],[70,88],[76,68],[64,52],[50,42]]],
     [[[50,8],[68,12],[72,26],[60,38],[50,44],[62,56],[74,70],[68,88],[50,94],[34,88],[28,68],[38,54],[50,44]]],
     [[[50,6],[66,10],[72,24],[60,38],[48,44],[38,54],[30,70],[36,88],[54,96],[70,88],[76,68],[62,52],[50,44]]],
-    [[[48,10],[64,14],[70,28],[58,40],[46,44],[36,56],[30,72],[38,88],[56,95],[72,86],[76,66],[62,50],[48,44]]]
+    [[[48,10],[64,14],[70,28],[58,40],[46,44],[36,56],[30,72],[38,88],[56,95],[72,86],[76,66],[62,50],[48,44]]],
+    // Bryan playtest styles (?v=10, 2026-10-25, traced from his ?v=9 screenshots):
+    // his wide tilted 8 (play-0, one stroke)
+    [[[23,10],[40,3],[61,2],[77,7],[75,19],[59,33],[40,44],[29,57],[27,75],[33,92],[51,98],[69,88],[75,70],[65,56],[51,47]]],
+    // his narrow tilted 8, gap at top-left (play-5 style)
+    [[[58,4],[50,6],[44,14],[44,26],[50,36],[58,40],[66,48],[68,62],[62,76],[50,80],[42,70],[44,56],[50,46],[58,40]]]
   ],
   "9": [
     [[[29,87],[53,77],[71,55],[79,33],[71,12],[51,4],[30,11],[21,27],[27,43],[45,51],[63,45],[77,31]]],
     [[[78,30],[60,8],[38,8],[24,24],[26,44],[44,54],[66,48],[78,30],[70,70],[52,92]]],
     [[[50,5],[68,10],[78,26],[72,42],[56,50],[38,44],[26,28],[32,12],[50,5],[74,34],[66,66],[54,95]]],
     [[[76,24],[60,6],[38,8],[26,26],[34,46],[56,50],[74,40],[72,62],[58,88],[42,96]]],
-    [[[50,6],[70,12],[78,30],[66,48],[44,50],[28,38],[28,20],[44,8],[50,6],[66,40],[62,70],[52,94]]]
+    [[[50,6],[70,12],[78,30],[66,48],[44,50],[28,38],[28,20],[44,8],[50,6],[66,40],[62,70],[52,94]]],
+    // Bryan playtest styles (?v=10, 2026-10-25, traced from his ?v=9 screenshots):
+    // his loop + long stem 9, two strokes (play-1)
+    [[[41,5],[60,2],[74,9],[71,26],[58,45],[38,54],[24,44],[22,22],[29,8],[41,5]],[[71,8],[76,28],[77,56],[78,84],[78,98]]],
+    // his loop + long stem 9, one stroke (play-1)
+    [[[41,5],[60,2],[74,9],[71,26],[58,45],[38,54],[24,44],[22,22],[29,8],[41,5],[71,8],[76,28],[77,56],[78,84],[78,98]]]
   ]
 };
 // Backwards-compatible name for older test scripts.
@@ -792,21 +828,6 @@ $("ovNext").onclick = () => { $("overlay").classList.remove("show"); setLevel(le
 $("ovStay").onclick = () => { $("overlay").classList.remove("show"); cleared = 0; levelTimes = []; renderProgress(); newProblem(); };
 
 $("btnClear").onclick = () => { entered = ""; clearTimeout(wrongClearTimer); inkConsumed = false; clearInk(); renderAnswer(); };
-$("btnCheck").onclick = () => {
-  // Fixed: the old handler checked a PARTIAL reading as a wrong answer
-  // (readInk returned false for a partial number, then the else-branch
-  // checked it anyway) and re-checked stale ink after a wrong attempt.
-  if (inkConsumed) { setFeedback("That one was already checked — write a new answer first.", "info"); return; }
-  if (inkStrokes.length > 0) {
-    if (readInk(true)) checkAnswer(); // full-length: manual tap = player confirms the best guess, even if ambiguous
-  } else if (entered !== "") {
-    if (entered.length === String(problem.a).length) checkAnswer();
-    else setFeedback("That answer has " + String(problem.a).length + " digits — keep going.", "info");
-  } else {
-    setFeedback("Write the answer first.", "info");
-  }
-};
-
 // ---------------- Drawing pad ----------------
 const canvas = $("pad"), ctx = canvas.getContext("2d");
 let drawing = false, currentStroke = null, inkStrokes = [], readTimer = null, wrongClearTimer = null, inkConsumed = false;
@@ -855,12 +876,11 @@ function clearInk() {
 
 // Read everything on the pad as ONE number. Always shows its best reading.
 // Returns true when it filled a complete (full-length) answer.
-// Ambiguity rule (never forces the expected answer): a full-length reading
-// whose best digit is ambiguous (margin < AMBIG_MARGIN) is NOT auto-checked
-// and does NOT count as a wrong attempt — it is shown with its runner-up
-// and the player either rewrites it clearer or taps Check to submit the
-// best guess explicitly. A confident reading auto-checks as before.
-function readInk(manual) {
+// Auto-check rule (Bryan's direction 2026-10-24, no Check button): EVERY
+// full-length reading auto-checks on the timer, confident or ambiguous —
+// the game never forces the expected answer, it just judges the best
+// reading it got. A partial reading only says "keep writing."
+function readInk() {
   if (inkStrokes.length === 0) return false;
   const want = String(problem.a).length;
   const res = recognizeNumber(inkStrokes, want);
@@ -868,24 +888,15 @@ function readInk(manual) {
   entered = res.text;
   renderAnswer();
   if (res.text.length === want) {
-    if (res.ambiguous && !manual) {
-      const amb = res.details.find(d => d.ambiguous);
-      setFeedback("That one's unclear — I see " + amb.digit + " (or " + amb.secondDigit + "). Write it clearer, or tap ✓ to go with " + amb.digit + ".", "info");
-      return false;
-    }
-    if (!manual) setTimeout(checkAnswer, 200);
+    setTimeout(checkAnswer, 200);
     return true;
   }
-  if (manual) {
-    setFeedback("I read " + res.text + " — the answer has " + want + " digits. Add the rest or Clear and rewrite.", "info");
-  } else {
-    setFeedback("I read " + res.text + "… keep writing, or tap ✓ Check it.", "info");
-  }
+  setFeedback("I read " + res.text + "… keep writing.", "info");
   return false;
 }
 function scheduleRead() {
   clearTimeout(readTimer);
-  readTimer = setTimeout(() => readInk(false), 550);
+  readTimer = setTimeout(() => readInk(), 550);
 }
 
 let activePointerId = null;
