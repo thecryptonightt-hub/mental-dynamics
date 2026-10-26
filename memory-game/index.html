@@ -992,7 +992,7 @@ function colComplete(c){ return state.every(r=>r[c]!==null); }
 function blankCount(){ let n=0; lv().given.forEach(r=>r.forEach(v=>{ if(v===null) n++; })); return n; }
 
 function renderLevels(){
-  const el = document.getElementById('nb-NB_LEVELS');
+  const el = document.getElementById('nb-levels');
   el.innerHTML = '';
   NB_LEVELS.forEach((_, i)=>{
     const b = document.createElement('button');
