@@ -253,6 +253,25 @@
     .podcast-copy h2{font-size:clamp(24px,7vw,36px);margin-bottom:6px}
     .podcast-copy p{color:var(--muted);margin:0;font-size:16px;max-width:560px}
     .podcast .btn{flex:0 0 auto}
+    .sleep-technique{padding:90px 0;background:var(--paper)}
+    .sleep-card{background:var(--light);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:36px;max-width:720px;margin-inline:auto}
+    .sleep-eyebrow{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ff2e88;margin:0 0 8px}
+    .sleep-card h2{font-family:var(--serif);font-size:clamp(26px,7vw,38px);line-height:1.2;margin:0 0 10px}
+    .sleep-byline{color:var(--muted);font-size:16px;margin:0 0 14px}
+    .sleep-byline strong{color:var(--accent-strong)}
+    .sleep-desc{font-size:16px;margin:0 0 18px}
+    .sleep-howto{background:var(--paper-2);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:0 0 20px}
+    .sleep-howto p{margin:0 0 10px;font-size:15px}
+    .sleep-howto p:last-child{margin-bottom:0}
+    .sleep-howto a{color:var(--accent-strong);font-weight:700}
+    .sleep-badge{display:inline-block;background:#00b578;color:#fff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:20px;margin:0 0 14px}
+    .sleep-player-label{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent-strong);margin:0 0 8px}
+    .sleep-card audio{width:100%;display:block;margin:0 0 8px}
+    .sleep-note{font-size:13px;color:var(--muted);margin:0 0 14px}
+    .sleep-details{list-style:none;margin:0;padding:0;font-size:15px}
+    .sleep-details li{padding:5px 0 5px 24px;position:relative}
+    .sleep-details li::before{content:"\2713";position:absolute;left:0;color:#00b578;font-weight:700}
+    @media (max-width:640px){.sleep-technique{padding:64px 0}.sleep-card{padding:26px 20px}}
     .faq{padding:120px 0}
     .faq-layout{display:grid;grid-template-columns:.72fr 1.28fr;gap:90px}
     .faq-title{position:sticky;top:30px;align-self:start}
@@ -621,6 +640,31 @@
           <p>Short conversations on the power of the mind, hypnosis myths, the subconscious, and emotional intelligence — listen wherever you are.</p>
         </div>
         <a class="btn" href="https://creators.spotify.com/pod/profile/mentaldynamics/" target="_blank" rel="noopener noreferrer">Listen to the podcast <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section class="sleep-technique" id="sleep-technique" aria-labelledby="sleep-technique-title">
+      <div class="wrap sleep-inner">
+        <div class="sleep-card">
+          <p class="sleep-eyebrow">Sleep Technique &middot; Free Audio</p>
+          <h2 id="sleep-technique-title">Fall Asleep Anywhere, Anytime</h2>
+          <p class="sleep-byline">A sleep technique taught by <strong>Bryan</strong> &mdash; about 8 minutes, in his own voice.</p>
+          <p class="sleep-desc">Having trouble sleeping? No worries. Bryan teaches you a simple technique &mdash; a fixed gaze, slow 4-count breathing, and a calm beach in your imagination &mdash; so you can fall asleep anywhere, any time.</p>
+          <div class="sleep-howto">
+            <p><strong>This is a technique, not a recording to fall asleep to.</strong> Listen to the whole recording to learn the technique first &mdash; then use the technique yourself to fall asleep. Once you know the steps, you won&rsquo;t need the recording every night. Just use the technique, and let yourself drift off.</p>
+            <p>If you&rsquo;re dealing with deeper issues &mdash; anxious feelings, stress, or some kind of trauma that doesn&rsquo;t allow you to fall asleep &mdash; the technique alone may not be enough. In that case, hire Bryan to look into whatever is going on and heal it with hypnotherapy, so you can fall asleep. <a href="tel:+19548512138">Call or text 954-851-2138</a> for a free consultation.</p>
+          </div>
+          <p><span class="sleep-badge">Free &mdash; the whole recording</span></p>
+          <p class="sleep-player-label">&#127926; Listen now &mdash; full 8 minutes, free</p>
+          <audio controls preload="metadata" src="assets/sleep-technique.mp3"></audio>
+          <p class="sleep-note">The full recording, free &mdash; about 8 minutes. Soft piano &amp; ocean underneath, in Bryan&rsquo;s own voice.</p>
+          <ul class="sleep-details">
+            <li>Free &mdash; the whole recording, no payment</li>
+            <li>About 8 minutes, in Bryan&rsquo;s own voice</li>
+            <li>Soft piano &amp; ocean underneath</li>
+            <li>Learn the technique, then use it on your own</li>
+          </ul>
+        </div>
       </div>
     </section>
 
